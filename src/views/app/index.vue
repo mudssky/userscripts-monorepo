@@ -1,260 +1,248 @@
 <template>
-  <el-dialog v-model="dialogVisible" title="配置面板" width="30%" :before-close="handleClose" class="min-h-[400px]">
-    <el-form :model="form" ref="ruleFormRef">
-      <el-form-item label="高亮样式" prop="highlightStyle" :rules="[
-        {
-          required: true,
-          whitespace: true,
-          message: '请输入高亮样式',
-          trigger: 'change',
-        },
-      ]">
-        <el-input v-model="form.highlightStyle" />
-      </el-form-item>
-      <el-form-item label="配置">
-        <el-input v-model="form.configJson" :placeholder="form.placeholder" type="textarea"
-          :autosize="{ minRows: 5, maxRows: 10 }" />
-      </el-form-item>
-    </el-form>
-    <el-row justify="end">
-      <el-space>
-        <el-button @click="handleCopyJson">复制json</el-button>
-        <el-button @click="handleUpdateConfig" type="primary">更新配置</el-button>
-      </el-space>
-    </el-row>
-  </el-dialog>
+  <!-- 主面板容器 -->
+  <div
+    v-if="matchedKeywords.length > 0 && !panelHidden"
+    class="fixed top-1/2 right-0 -translate-y-1/2 z-[9999] text-sm shadow-2xl transition-all duration-300 ease-out min-h-[350px] overflow-hidden rounded-l-xl backdrop-blur-md"
+    :class="
+      cn(
+        'highlight-nav-panel',
+        { 'panel-expanded': panelExpanded, 'panel-pinned': panelPinned },
+        panelExpanded || panelPinned ? 'w-[280px]' : 'w-[50px]',
+        dynamicColors.borderColor,
+        dynamicColors.textPrimary,
+        isDarkMode ? 'dark' : '',
+      )
+    "
+    @mouseenter="handlePanelHover(true)"
+    @mouseleave="handlePanelHover(false)"
+    :style="{
+      background: dynamicColors.panelBg,
+      boxShadow: isDarkMode
+        ? '-6px 0 20px rgba(0, 0, 0, 0.6)'
+        : '-6px 0 20px rgba(0, 0, 0, 0.15)',
+    }"
+  >
+    <div class="flex">
+      <!-- 触发按钮组件 -->
+      <TriggerButtons
+        :is-dark-mode="isDarkMode"
+        :panel-pinned="panelPinned"
+        :is-debug-mode="isDebugMode"
+        :dynamic-colors="dynamicColors"
+        @toggle-dark-mode="toggleDarkMode"
+        @toggle-panel-pin="togglePanelPin"
+        @toggle-debug-dialog="toggleDebugDialog"
+        @close-panel="handleClosePanel"
+      />
+
+      <!-- 导航面板组件 -->
+      <NavigationPanel
+        :panel-expanded="panelExpanded"
+        :panel-pinned="panelPinned"
+        :highlight-state="highlightState"
+        :matched-keywords="matchedKeywords"
+        :dynamic-colors="dynamicColors"
+        :is-dark-mode="isDarkMode"
+        @previous="handlePrevious"
+        @next="handleNext"
+        @enable-highlight="handleEnableHighlight"
+        @clear-highlight="handleClearHighlight"
+        @open-config="handleOpenPanel"
+      />
+    </div>
+  </div>
+
+  <!-- 配置面板对话框 -->
+  <ConfigDialog
+    v-model:visible="dialogVisible"
+    :form="form"
+    :rule-form-ref="ruleFormRef"
+    @close="handleClose"
+    @copy-json="handleCopyJson"
+    @preview-style="handlePreviewStyle"
+    @update-config="handleUpdateConfig"
+    @theme-change="handleThemeChange"
+  />
+
+  <!-- 调试信息对话框 -->
+  <DebugDialog
+    v-model:visible="debugDialogVisible"
+    :active-tab="activeDebugTab"
+    :debug-info="debugInfo"
+    :highlight-state="highlightState"
+    :rule-list="ruleList"
+    :matched-rule-list="matchedRuleList"
+    :matched-keywords="matchedKeywords"
+    :debug-logs="debugLogs"
+    @close="handleCloseDebug"
+    @clear-logs="clearDebugLogs"
+    @export-debug="
+      () =>
+        exportDebugInfo(
+          debugInfo,
+          highlightState,
+          ruleList,
+          matchedRuleList,
+          debugLogs,
+        )
+    "
+    @refresh-info="() => refreshDebugInfo(debugInfo)"
+  />
 </template>
 
-<script lang="ts" name="app" setup>
-import {
-  GM_getValue,
-  GM_registerMenuCommand,
-  GM_setClipboard,
-  GM_setValue,
-} from '$'
-import { computed, onMounted, reactive, readonly, ref } from 'vue'
-import { ElMessage, FormInstance } from 'element-plus'
-import {
-  cleanKeywords,
-  closeHighlight,
-  highlightKeyword,
-} from '../../util/tools'
+<script setup lang="ts">
+import TriggerButtons from './components/TriggerButtons.vue'
+import NavigationPanel from './components/NavigationPanel.vue'
+import ConfigDialog from './components/ConfigDialog.vue'
+import DebugDialog from './components/DebugDialog.vue'
+import { useHighlightApp } from './hook'
+import { cn } from '@mudssky/jsutils'
+// 使用自定义 hook 获取所有状态和方法
+const {
+  // 响应式状态
+  ruleFormRef,
+  dialogVisible,
+  ruleList,
+  highlightState,
+  panelExpanded,
+  panelPinned,
+  panelHidden,
+  panelHideTimeout,
+  isDarkMode,
+  isDebugMode,
+  debugDialogVisible,
+  activeDebugTab,
+  debugLogs,
+  debugInfo,
+  pageState,
+  form,
 
-interface RuleItem {
-  keywords: string[]
-  matchUrl: string
-}
-const configName = 'hightlight-config'
+  // 计算属性
+  matchedRuleList,
+  matchedKeywords,
+  dynamicColors,
 
-const ruleFormRef = ref<FormInstance>()
-const dialogVisible = ref(false)
-const ruleList = ref<RuleItem[]>([])
-
-const pageState = reactive<{
-  globalStyle?: HTMLStyleElement
-}>({
-  globalStyle: undefined,
-})
-const form = reactive({
-  configJson: '',
-  defaultHightlightStyle: 'background:gold;color:black;',
-  highlightStyle: 'background:gold;color:black;',
-  placeholder: `//示例：
-	[
-        {
-            "keywords": ["成年コミック"],
-            "matchUrl": "sukebei.nyaa.si",
-        },
-    ]
-	
-	`,
-})
-const matchedRuleList = computed(() => {
-  return ruleList.value.filter((rule: RuleItem) => {
-    var urlPattern = new RegExp(rule.matchUrl)
-    return urlPattern.test(window.location.href)
-  })
-})
-
-const matchedKeywords = computed(() => {
-  const keywordsLists = matchedRuleList.value.map((item) => {
-    return item.keywords
-  })
-  // 展开然后去重
-  return [...new Set(keywordsLists.flat())]
-})
-
-/**
- * 生成高亮的伪元素
- * @param styleText
- * @param customHighlightname
- */
-// function generateHighlightStyle(styleText: string, customHighlightname = 'highlight-keywords') {
-// 	return `::highlight(${customHighlightname}){${styleText}}`
-// }
-
-/**
- * 通过属性选择器实现高亮
- */
-function generateHighlightStyle(styleText: string) {
-  return `[data-highlight="yes"]{${styleText}}`
-}
-/**
- * 组件挂载时，加载高亮的style标签
- */
-function loadGlobalStyle() {
-  let style = document.createElement('style')
-  style.textContent = generateHighlightStyle(form.defaultHightlightStyle)
-  document.head.appendChild(style)
-  pageState.globalStyle = style
-}
-
-/**
- * 更新高亮的style标签的高亮样式
- * @param styleText
- */
-function updateHighlightStyle(styleText: string) {
-  if (pageState.globalStyle) {
-    pageState.globalStyle.textContent = generateHighlightStyle(styleText)
-  }
-}
-
-function handleCopyJson() {
-  GM_setClipboard(form.configJson, 'text')
-}
-
-function loadRuleList() {
-  // const vv: any = []
-  const vv = GM_getValue(configName, [])
-  ruleList.value = vv
-  form.configJson = JSON.stringify(ruleList.value)
-}
-function handleOpenPanel() {
-  dialogVisible.value = true
-}
-
-function handleClose() {
-  dialogVisible.value = false
-}
-/**
- * ajv库打包体积太大了,改用手动校验了
- * @param configList
- */
-function validateConfig(configList: RuleItem[]): [boolean, string] {
-
-  const res: [boolean, string] = [false, '配置项格式不对']
-  if (!Array.isArray(configList)) {
-    return res
-  }
-  if (
-    configList.some((item) => {
-      return typeof item !== 'object'
-    })
-  ) {
-    return res
-  }
-  // 校验关键词
-  for (const property of ['keywords', 'matchUrl'] as const) {
-    if (
-      configList.some((item) => {
-        return !(item?.[property] ?? false)
-      })
-    ) {
-      // 存在不满足的属性
-
-      res[1] = `${property} 属性是必须的`
-      return res
-    }
-  }
-
-  for (const item of configList) {
-    if (typeof item.matchUrl !== 'string') {
-      res[1] = 'matchUrl类型错误'
-      return res
-    }
-    if (!Array.isArray(item.keywords)) {
-      res[1] = 'keywords类型错误'
-      return res
-    }
-    for (const keyword of item.keywords) {
-      if (typeof keyword !== 'string') {
-        res[1] = 'keywords类型错误'
-        return res
-      }
-      if (keyword.trim() === '') {
-        console.log('空字符串');
-
-        res[1] = 'keywords不能为空'
-        return res
-      }
-    }
-  }
-  // 避免空字符串
-  return [true, res[1]]
-}
-
-async function handleUpdateConfig() {
-  await ruleFormRef.value?.validate((valid, fields) => {
-    if (valid) {
-      console.log('submit!')
-    } else {
-      console.log('error submit!', fields)
-    }
-  })
-  let list: RuleItem[]
-
-  try {
-    list = JSON.parse(form.configJson)
-    // console.log({ list })
-  } catch (error) {
-    ElMessage({
-      type: 'warning',
-      message: 'json解析错误',
-    })
-    return
-  }
-  const [valid, errorMessage] = validateConfig(list)
-  if (!valid) {
-    ElMessage({
-      type: 'warning',
-      message: errorMessage,
-    })
-    return
-  }
-  ruleList.value = list
-  updateHighlightStyle(form.highlightStyle)
-  GM_setValue(configName, list)
-  highlightMatchedKeywords()
-  ElMessage({
-    type: 'success',
-    message: '配置更新成功',
-  })
-  handleClose()
-}
-
-function highlightMatchedKeywords() {
-  if (matchedKeywords.value.length < 1) {
-    return
-  }
-
-  const [pattern, _] = cleanKeywords(matchedKeywords.value)
-  closeHighlight(document.body, pattern)
-  highlightKeyword(document.body, pattern)
-}
-
-onMounted(() => {
-  // 挂载时从本地读取配置
-  loadRuleList()
-  // 如果没有匹配到规则列表，不需要加载全局样式
-  if (matchedKeywords.value.length > 0) {
-    loadGlobalStyle()
-    highlightMatchedKeywords()
-  }
-  GM_registerMenuCommand('打开配置面板', handleOpenPanel)
-})
+  // 方法
+  handlePanelHover,
+  togglePanelPin,
+  toggleDarkMode,
+  handleClosePanel,
+  loadGlobalStyle,
+  updateHighlightStyle,
+  handlePrevious,
+  handleNext,
+  handleEnableHighlight,
+  handleClearHighlight,
+  handleThemeChange,
+  toggleDebugDialog,
+  handleCloseDebug,
+  clearDebugLogs,
+  handlePreviewStyle,
+  handleCopyJson,
+  loadRuleList,
+  handleOpenPanel,
+  handleClose,
+  handleUpdateConfig,
+  highlightMatchedKeywords,
+  refreshDebugInfo,
+  exportDebugInfo,
+} = useHighlightApp()
 </script>
 <style scoped>
 .dialog-footer button:first-child {
   margin-right: 10px;
+}
+
+/* 调试面板样式 */
+.debug-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fafafa;
+}
+
+.debug-section h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.logs-container {
+  max-height: 400px;
+  overflow-y: auto;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.log-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  margin-bottom: 2px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.log-time {
+  color: #6c757d;
+  margin-right: 8px;
+  min-width: 80px;
+}
+
+.log-level {
+  margin-right: 8px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: bold;
+  min-width: 50px;
+  text-align: center;
+}
+
+.log-message {
+  flex: 1;
+}
+
+.log-info {
+  background-color: #d1ecf1;
+  border-left: 3px solid #17a2b8;
+}
+
+.log-info .log-level {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.log-warn {
+  background-color: #fff3cd;
+  border-left: 3px solid #ffc107;
+}
+
+.log-warn .log-level {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.log-error {
+  background-color: #f8d7da;
+  border-left: 3px solid #dc3545;
+}
+
+.log-error .log-level {
+  background-color: #dc3545;
+  color: white;
+}
+
+.keywords-display {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 10px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
 }
 </style>
