@@ -7,7 +7,11 @@
     "build": "pnpm --filter ./userscripts/* run build",
     "build:highlight-keywords": "pnpm --filter highlight-keywords run build",
     "dev:highlight-keywords": "pnpm --filter highlight-keywords run dev",
-    "preview:highlight-keywords": "pnpm --filter highlight-keywords run preview"
+    "preview:highlight-keywords": "pnpm --filter highlight-keywords run preview",
+    "subtree:pull": "tsx scripts/subtree-pull.ts",
+    "subtree:pull:highlight-keywords": "tsx scripts/subtree-pull.ts highlight-keywords",
+    "subtree:push:highlight-keywords": "git subtree push --prefix=userscripts/highlight-keywords https://github.com/mudssky/highlight-keywords.git main",
+    "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json"
   },
   "keywords": [
     "userscript",
@@ -15,5 +19,10 @@
   ],
   "author": "mudssky",
   "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^25.6.2",
+    "typescript": "^6.0.3",
+    "tsx": "^4.21.0"
+  },
   "packageManager": "pnpm@10.33.0"
 }

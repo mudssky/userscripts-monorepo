@@ -19,6 +19,10 @@ pnpm build
 pnpm dev:highlight-keywords
 pnpm build:highlight-keywords
 pnpm preview:highlight-keywords
+pnpm subtree:pull
+pnpm subtree:pull:highlight-keywords
+pnpm subtree:push:highlight-keywords
+pnpm typecheck:scripts
 ```
 
 也可以直接使用 pnpm filter：
@@ -35,13 +39,23 @@ pnpm --filter ./userscripts/highlight-keywords run dev
 后续从上游同步：
 
 ```bash
-git subtree pull --prefix=userscripts/highlight-keywords https://github.com/mudssky/highlight-keywords.git main
+pnpm subtree:pull
+pnpm subtree:pull:highlight-keywords
+```
+
+`pnpm subtree:pull` 会按 `scripts/subtree-pull.ts` 里的仓库配置顺序同步全部 subtree 仓库；也可以在命令后追加仓库名，只同步指定仓库：
+
+```bash
+pnpm subtree:pull -- highlight-keywords
+pnpm subtree:pull -- --dry-run
 ```
 
 如需把 monorepo 内的修改推回上游：
 
 ```bash
-git subtree push --prefix=userscripts/highlight-keywords https://github.com/mudssky/highlight-keywords.git main
+pnpm subtree:push:highlight-keywords
 ```
+
+这些命令只是封装 `git subtree pull/push`。subtree 不会自动拉取上游仓库；每次要同步时都需要显式运行 pull 脚本，并检查产生的合并结果。
 
 依赖锁定统一使用仓库根目录的 `pnpm-lock.yaml`，子项目目录不保留独立 lockfile。
