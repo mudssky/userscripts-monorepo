@@ -6,7 +6,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  userscripts/highlight-keywords:
     dependencies:
       '@mudssky/jsutils':
         specifier: ^1.31.0
