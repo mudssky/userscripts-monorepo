@@ -1,0 +1,8 @@
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+/* 油猴脚本必须禁用，避免影响原来网页的样式 */
+/* @import "tailwindcss/preflight.css" layer(base); */
+@scope (.tailwind) {
+  @import 'tailwindcss/utilities.css' layer(utilities);
+}
+@custom-variant dark (&:where(.dark, .dark *));
