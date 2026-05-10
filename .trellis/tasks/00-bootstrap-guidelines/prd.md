@@ -21,8 +21,16 @@ the rest conversationally.
 
 ## Status (update the checkboxes as you complete each item)
 
-- [ ] Fill frontend guidelines
-- [ ] Add code examples
+- [x] Fill frontend guidelines
+- [x] Add code examples
+
+## Session Decisions
+
+- 多 userscript 采用“独立脚本目录”模式：每个脚本位于 `userscripts/<script-name>/`，保持业务边界独立；是否作为独立 pnpm workspace 包取决于复杂度、依赖和构建方式。
+- 技术栈不强制统一：复杂 UI 脚本可按需求使用 Vite + Vue 或 Vite + React；简单脚本可考虑根级 Rolldown 集中构建。
+- `vite-plugin-monkey` 是当前成熟路径，因为它对 userscript metadata、grant、match、updateURL、downloadURL 等油猴脚本配置支持完整；如果使用 Rolldown，需要先实现或引入类似的 metadata 配置与头部生成能力。
+- 根级 Rolldown 的 userscript metadata 配置格式暂不提前设计；等第一个轻量脚本确实需要根级构建时，再同步设计配置接口、头部生成逻辑和命令约定。
+- 当前组件、hook、状态管理规范只覆盖已有 Vue 脚本；React 脚本出现时需要基于真实代码补充 React 专属规范，不能直接套用 Vue guideline。
 
 ---
 
