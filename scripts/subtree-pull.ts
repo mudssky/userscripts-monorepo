@@ -21,6 +21,12 @@ const repositories: SubtreeRepository[] = [
     repository: 'https://github.com/mudssky/highlight-keywords.git',
     ref: 'main',
   },
+  {
+    name: 'github-enhance',
+    prefix: 'userscripts/github-enhance',
+    repository: 'https://github.com/mudssky/github-enhance.git',
+    ref: 'main',
+  },
 ]
 
 /**
