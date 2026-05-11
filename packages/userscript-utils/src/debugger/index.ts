@@ -2,6 +2,7 @@ export { DomDebugger } from './dom-debugger'
 export {
   debugSelectors,
   diagnoseSelectors,
+  dumpDomOutline,
   formatDiagnostics,
   isValidSelector,
 } from './core'

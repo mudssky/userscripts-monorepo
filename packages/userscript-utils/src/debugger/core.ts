@@ -221,3 +221,57 @@ function truncateHtml(html: string, maxLength: number): string {
   if (html.length <= maxLength) return html
   return `${html.slice(0, maxLength)}...`
 }
+
+/**
+ * 打印页面 DOM 结构概览，辅助调试选择器
+ *
+ * @param root - 起始节点，默认 document.body
+ * @param maxDepth - 最大递归深度，默认 3
+ * @returns 格式化的 DOM 结构文本
+ */
+export function dumpDomOutline(
+  root: Element | Document = document.body,
+  maxDepth = 3,
+): string {
+  const lines: string[] = ['页面 DOM 结构概览:', '─'.repeat(40)]
+
+  const MAX_CHILDREN = 15
+
+  function describe(el: Element): string {
+    const tag = el.tagName.toLowerCase()
+    const id = el.id ? `#${el.id}` : ''
+    const classes =
+      el.classList.length > 0 ? `.${Array.from(el.classList).join('.')}` : ''
+    return `${tag}${id}${classes}`.slice(0, 80)
+  }
+
+  function walk(el: Element, depth: number, prefix: string): void {
+    if (depth === 0) {
+      lines.push(describe(el))
+    }
+
+    const childCount = Math.min(el.children.length, MAX_CHILDREN)
+    const childPrefix = depth === 0 ? '' : `${prefix}    `
+    for (let i = 0; i < childCount; i++) {
+      const isLast = i === childCount - 1 && el.children.length <= MAX_CHILDREN
+      const connector = isLast ? '└── ' : '├── '
+      const child = el.children[i]
+      lines.push(`${childPrefix}${connector}${describe(child)}`)
+      if (depth + 1 <= maxDepth) {
+        walk(child, depth + 1, childPrefix)
+      }
+    }
+    if (el.children.length > MAX_CHILDREN) {
+      lines.push(`${childPrefix}└── ... (${el.children.length - MAX_CHILDREN} more)`)
+    }
+  }
+
+  const startEl = root instanceof Document ? root.body : root
+  if (startEl) {
+    walk(startEl, 0, '')
+  } else {
+    lines.push('(document.body 不存在)')
+  }
+
+  return lines.join('\n')
+}
