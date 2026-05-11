@@ -38,7 +38,7 @@ export default defineConfig(async ({ mode }) => ({
         author: packageJson.author,
         version: packageJson.version,
         license: packageJson.license,
-        supportURL: 'https://github.com/mudssky/highlight-keywords/issues',
+        supportURL: 'https://github.com/mudssky/userscripts-monorepo/issues',
         grant: [
           // 'GM.openInTab',
           'GM_registerMenuCommand',
@@ -49,9 +49,9 @@ export default defineConfig(async ({ mode }) => ({
         ],
         'run-at': 'document-end',
         updateURL:
-          'https://github.com/mudssky/highlight-keywords/releases/latest/download/highlight-keywords.user.js',
+          'https://github.com/mudssky/userscripts-monorepo/releases/latest/download/highlight-keywords.user.js',
         downloadURL:
-          'https://github.com/mudssky/highlight-keywords/releases/latest/download/highlight-keywords.user.js',
+          'https://github.com/mudssky/userscripts-monorepo/releases/latest/download/highlight-keywords.user.js',
       },
       build: {
         externalGlobals: {
