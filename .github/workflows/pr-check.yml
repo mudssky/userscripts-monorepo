@@ -1,0 +1,30 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'pnpm'
+
+      - name: install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: build all userscripts
+        run: pnpm build
+
+      - name: test shared utils
+        run: pnpm --filter @mudssky/userscript-utils test:run

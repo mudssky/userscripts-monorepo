@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'pnpm'
+
+      - name: install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: create release pull request or publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: pnpm run release
+          version: pnpm run version-packages
+          commit: 'chore: version packages'
+          title: 'chore: version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: upload userscript assets to releases
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for pkg_dir in userscripts/*/; do
+            pkg_name=$(node -p "require('./${pkg_dir}package.json').name")
+            pkg_version=$(node -p "require('./${pkg_dir}package.json').version")
+            tag="${pkg_name}@${pkg_version}"
+            file="${pkg_dir}dist/${pkg_name}.user.js"
+
+            if [ -f "$file" ]; then
+              echo "Uploading ${file} to release ${tag}"
+              gh release upload "$tag" "$file" --clobber
+            else
+              echo "No built file found at ${file}, skipping"
+            fi
+          done
