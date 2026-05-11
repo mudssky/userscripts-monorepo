@@ -6,6 +6,7 @@ import { defineConfig } from 'vite'
 import monkey from 'vite-plugin-monkey'
 import packageJson from './package.json'
 import { tailwindStyleInjector } from './viteplugins/vite-plugin-monkey-style-injector'
+import { styleInjector } from '@mudssky/userscript-utils/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({

@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import styleCss from './style.css?style'
 import epCss from 'element-plus/dist/index.css?style'
-import { createShadowContainer } from './utils/create-shadow-container'
+import { createShadowContainer } from '@mudssky/userscript-utils'
 const app = createApp(App)
 import ElementPlus from 'element-plus'
 
