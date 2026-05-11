@@ -2,6 +2,8 @@ import { SELECTORS } from './selectors'
 import { injectButtons, removeInjectedButtons } from './ui'
 import { registerDomDebuggerMenu } from '@mudssky/userscript-utils'
 
+const isInIframe = window.self !== window.top
+
 /** 获取当前活动标签页的结果容器 */
 function getActiveResultContainer(): Element | null {
   const resultAreas = document.querySelectorAll(SELECTORS.resultContainer)
@@ -31,23 +33,44 @@ function checkAndInject(): void {
   })
 }
 
-/** 注册 DOM Debugger 诊断菜单 */
-registerDomDebuggerMenu({
-  scriptName: 'DMS Helper',
-  selectors: {
-    resultContainer: SELECTORS.resultContainer,
-    toolbar: SELECTORS.toolbar,
-    table: SELECTORS.table,
-    headerRow: SELECTORS.headerRow,
-    bodyRows: SELECTORS.bodyRows,
-    activeTabPane: SELECTORS.activeTabPane,
-  },
-  autoDiagnose: true,
-})
+/** 注册 DOM Debugger 诊断菜单 —— 按上下文拆分选择器 */
+if (isInIframe) {
+  // iframe（SQL 控制台）内：诊断表格/工具栏相关选择器
+  registerDomDebuggerMenu({
+    scriptName: 'DMS Helper (SQL Console)',
+    selectors: {
+      resultContainer: SELECTORS.resultContainer,
+      toolbar: SELECTORS.toolbar,
+      table: SELECTORS.table,
+      headerRow: SELECTORS.headerRow,
+      bodyRows: SELECTORS.bodyRows,
+    },
+    autoDiagnose: true,
+    domDumpDepth: 6,
+  })
+} else {
+  // 主页面：诊断标签页和 iframe 结构
+  registerDomDebuggerMenu({
+    scriptName: 'DMS Helper',
+    selectors: {
+      activeTabPane: SELECTORS.activeTabPane,
+      sqlConsoleIframe: '.next-tabs-tabpane.active iframe.iframe',
+    },
+    autoDiagnose: false,
+    domDumpDepth: 4,
+  })
+}
 
-// 初始检查
-checkAndInject()
+// 仅在 iframe（SQL 控制台）内执行按钮注入
+if (isInIframe) {
+  checkAndInject()
 
-// 监听页面变化（SPA 路由切换或内容加载）
-const observer = new MutationObserver(checkAndInject)
-observer.observe(document.body, { childList: true, subtree: true })
+  const observer = new MutationObserver(() => {
+    if (document.querySelector('#dms-helper-csv-btn')) {
+      observer.disconnect()
+      return
+    }
+    checkAndInject()
+  })
+  observer.observe(document.body, { childList: true, subtree: true })
+}

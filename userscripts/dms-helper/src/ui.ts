@@ -37,13 +37,14 @@ export function showToast(message: string): void {
     position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
     background-color: #333; color: #fff; padding: 10px 20px; border-radius: 4px;
     font-size: 14px; z-index: 999999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+    opacity: 0; transition: opacity 0.3s ease; cursor: pointer;
   `
+  toast.onclick = () => toast.remove()
   document.body.appendChild(toast)
   requestAnimationFrame(() => (toast.style.opacity = '1'))
   setTimeout(() => {
     toast.style.opacity = '0'
-    setTimeout(() => toast.parentNode?.removeChild(toast), 300)
+    setTimeout(() => toast.remove(), 300)
   }, 2500)
 }
 
