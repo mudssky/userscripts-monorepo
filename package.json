@@ -17,7 +17,7 @@
     "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish",
+    "release": "turbo run build",
     "prepare": "husky"
   },
   "keywords": [
