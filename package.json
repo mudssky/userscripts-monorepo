@@ -8,9 +8,11 @@
     "build:highlight-keywords": "pnpm --filter highlight-keywords run build",
     "dev:highlight-keywords": "pnpm --filter highlight-keywords run dev",
     "preview:highlight-keywords": "pnpm --filter highlight-keywords run preview",
-    "subtree:pull": "tsx scripts/subtree-pull.ts",
-    "subtree:pull:highlight-keywords": "tsx scripts/subtree-pull.ts highlight-keywords",
-    "subtree:push:highlight-keywords": "git subtree push --prefix=userscripts/highlight-keywords https://github.com/mudssky/highlight-keywords.git main",
+    "subtree": "tsx scripts/subtree-cli/index.ts",
+    "subtree:pull": "tsx scripts/subtree-cli/index.ts pull",
+    "subtree:push": "tsx scripts/subtree-cli/index.ts push",
+    "subtree:list": "tsx scripts/subtree-cli/index.ts list",
+    "subtree:status": "tsx scripts/subtree-cli/index.ts status",
     "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json"
   },
   "keywords": [
@@ -22,6 +24,8 @@
   "devDependencies": {
     "@types/node": "^25.6.2",
     "biome": "^0.3.3",
+    "commander": "^14.0.3",
+    "execa": "^8.0.1",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
