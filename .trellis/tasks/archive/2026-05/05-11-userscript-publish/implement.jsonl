@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "monorepo 包目录结构规范"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "代码质量标准"}
+{"file": ".trellis/tasks/05-11-userscript-publish/prd.md", "reason": "完整需求文档：changesets + CI/CD + Greasyfork"}
+{"file": ".trellis/tasks/05-11-userscript-publish/research/greasyfork-publishing.md", "reason": "Greasyfork 发布机制研究"}
+{"file": ".trellis/tasks/05-11-userscript-publish/research/current-release-setup.md", "reason": "现有 semantic-release 配置分析"}

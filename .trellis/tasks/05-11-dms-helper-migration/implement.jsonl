@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "monorepo 包的目录结构规范，创建新包时参考"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "代码质量标准，TypeScript 和测试要求"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "TypeScript 类型安全规范，共享包需要严格类型"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "代码复用指南，提取共享工具时参考"}
+{"file": ".trellis/tasks/05-11-dms-helper-migration/prd.md", "reason": "本任务的完整需求文档，包含所有决策和实施计划"}

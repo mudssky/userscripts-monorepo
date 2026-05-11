@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "验证代码质量"}
+{"file": ".trellis/tasks/05-11-userscript-publish/prd.md", "reason": "验收标准：changesets 配置、CI workflow、产物上传、semantic-release 清理"}
