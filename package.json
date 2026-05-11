@@ -16,7 +16,8 @@
     "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm build && changeset publish",
+    "prepare": "husky"
   },
   "keywords": [
     "userscript",
@@ -31,6 +32,8 @@
     "biome": "^0.3.3",
     "commander": "^14.0.3",
     "execa": "^8.0.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.4",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
