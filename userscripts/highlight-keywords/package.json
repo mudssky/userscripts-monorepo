@@ -10,8 +10,7 @@
   "scripts": {
     "dev": "cross-env DEBUG_MODE=true vite",
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "semantic-release": "semantic-release"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@mudssky/jsutils": "^1.34.1",
@@ -22,18 +21,10 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.15",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/exec": "^7.1.0",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^12.0.8",
-    "@semantic-release/npm": "^13.1.5",
-    "@semantic-release/release-notes-generator": "^14.1.1",
     "@types/node": "^25.6.2",
     "@vitejs/plugin-vue": "^6.0.6",
     "cross-env": "^10.1.0",
     "prettier": "^3.8.3",
-    "semantic-release": "^25.0.3",
     "tailwindcss": "^4.3.0",
     "terser": "^5.47.1",
     "typescript": "^6.0.3",
