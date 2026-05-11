@@ -28,7 +28,7 @@ const filterIgnoredDirs = (files) =>
  * 从变更文件列表中提取需要 typecheck 的包目录。
  *
  * @param {string[]} files 仓库根目录下的相对路径列表。
- * @returns {string[]} 需要运行 tsc --noEmit 的包目录列表（去重）。
+ * @returns {string[]} 需要运行 typecheck 的包目录列表（去重）。
  */
 const getAffectedPackages = (files) => {
   const prefixes = ['packages/', 'userscripts/']
@@ -54,7 +54,7 @@ export default {
     if (packages.length === 0) return []
 
     const typecheckCmds = packages
-      .map((pkg) => `cd ${pkg} && npx tsc --noEmit`)
+      .map((pkg) => `cd ${pkg} && pnpm run typecheck`)
       .join(' && ')
     return [`echo "[typecheck] ${packages.join(', ')}" && ${typecheckCmds}`]
   },

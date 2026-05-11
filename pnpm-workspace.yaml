@@ -1,3 +1,6 @@
 packages:
   - 'packages/*'
   - 'userscripts/*'
+allowBuilds:
+  core-js: true
+  esbuild: true
