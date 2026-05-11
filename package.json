@@ -4,7 +4,7 @@
   "private": true,
   "description": "pnpm monorepo for userscript projects.",
   "scripts": {
-    "build": "pnpm --filter ./userscripts/* run build",
+    "build": "turbo run build",
     "build:highlight-keywords": "pnpm --filter highlight-keywords run build",
     "dev:highlight-keywords": "pnpm --filter highlight-keywords run dev",
     "preview:highlight-keywords": "pnpm --filter highlight-keywords run preview",
