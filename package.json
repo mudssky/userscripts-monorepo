@@ -13,7 +13,10 @@
     "subtree:push": "tsx scripts/subtree-cli/index.ts push",
     "subtree:list": "tsx scripts/subtree-cli/index.ts list",
     "subtree:status": "tsx scripts/subtree-cli/index.ts status",
-    "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json"
+    "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build && changeset publish"
   },
   "keywords": [
     "userscript",
@@ -22,6 +25,8 @@
   "author": "mudssky",
   "license": "ISC",
   "devDependencies": {
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.0",
     "@types/node": "^25.6.2",
     "biome": "^0.3.3",
     "commander": "^14.0.3",
