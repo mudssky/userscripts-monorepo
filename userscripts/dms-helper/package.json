@@ -1,0 +1,24 @@
+{
+  "name": "dms-helper",
+  "private": true,
+  "version": "1.1.0",
+  "type": "module",
+  "homepage": "https://github.com/mudssky/dms-helper",
+  "description": "阿里云 DMS 查询结果表格复制工具（CSV & Markdown）",
+  "author": "mudssky",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@mudssky/userscript-utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.15",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.11",
+    "vite-plugin-monkey": "^8.0.1"
+  }
+}
