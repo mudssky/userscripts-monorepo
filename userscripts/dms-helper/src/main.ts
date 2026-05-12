@@ -4,14 +4,15 @@ import { registerDomDebuggerMenu } from '@mudssky/userscript-utils'
 
 const isInIframe = window.self !== window.top
 
-/** 获取当前活动标签页的结果容器 */
+/** 获取当前活动执行结果 tab 的结果容器 */
 function getActiveResultContainer(): Element | null {
   const resultAreas = document.querySelectorAll(SELECTORS.resultContainer)
   for (const resultArea of resultAreas) {
-    const tabPane = resultArea.closest('.next-tabs-tabpane')
-    if (tabPane?.matches(SELECTORS.activeTabPane)) {
-      return resultArea
+    // 非活动执行结果 tab 的 tabpane 会加 hidden 类
+    if (resultArea.closest('.next-tabs-tabpane.hidden')) {
+      continue
     }
+    return resultArea
   }
   return null
 }
