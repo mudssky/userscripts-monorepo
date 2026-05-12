@@ -1,5 +1,11 @@
 # dms-helper
 
+## 1.2.1
+
+### Patch Changes
+
+- [`b6edd91`](https://github.com/mudssky/userscripts-monorepo/commit/b6edd91bce30a44b7cd3f9a44df98e645e5c9ce8) Thanks [@mudssky](https://github.com/mudssky)! - 修复执行结果 tab 切换时按钮不跟随切换的问题
+
 ## 1.2.0
 
 ### Minor Changes
