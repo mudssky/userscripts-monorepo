@@ -34,11 +34,10 @@ function checkAndInject(): void {
   })
 }
 
-/** 注册 DOM Debugger 诊断菜单 —— 按上下文拆分选择器 */
+/** 注册 DOM Debugger 诊断菜单 —— 仅在 iframe（SQL 控制台）内 */
 if (isInIframe) {
-  // iframe（SQL 控制台）内：诊断表格/工具栏相关选择器
   registerDomDebuggerMenu({
-    scriptName: 'DMS Helper (SQL Console)',
+    scriptName: 'DMS Helper',
     selectors: {
       resultContainer: SELECTORS.resultContainer,
       toolbar: SELECTORS.toolbar,
@@ -48,17 +47,6 @@ if (isInIframe) {
     },
     autoDiagnose: true,
     domDumpDepth: 6,
-  })
-} else {
-  // 主页面：诊断标签页和 iframe 结构
-  registerDomDebuggerMenu({
-    scriptName: 'DMS Helper',
-    selectors: {
-      activeTabPane: SELECTORS.activeTabPane,
-      sqlConsoleIframe: '.next-tabs-tabpane.active iframe.iframe',
-    },
-    autoDiagnose: false,
-    domDumpDepth: 4,
   })
 }
 
