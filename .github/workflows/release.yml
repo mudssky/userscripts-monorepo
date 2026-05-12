@@ -49,8 +49,10 @@ jobs:
           for pkg_dir in userscripts/*/; do
             pkg_name=$(node -p "require('./${pkg_dir}package.json').name")
             pkg_version=$(node -p "require('./${pkg_dir}package.json').version")
+            # vite 输出文件名不含 scope，取最后一个 / 后的部分
+            pkg_basename="${pkg_name##*/}"
             tag="${pkg_name}@${pkg_version}"
-            file="${pkg_dir}dist/${pkg_name}.user.js"
+            file="${pkg_dir}dist/${pkg_basename}.user.js"
 
             if gh release view "$tag" >/dev/null 2>&1; then
               echo "Release ${tag} already exists, skipping"
