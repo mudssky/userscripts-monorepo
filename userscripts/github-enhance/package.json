@@ -1,5 +1,5 @@
 {
-  "name": "github-enhance",
+  "name": "@mudssky/github-enhance",
   "private": true,
   "version": "1.2.0",
   "type": "module",
