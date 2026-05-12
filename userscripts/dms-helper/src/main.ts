@@ -65,12 +65,20 @@ if (isInIframe) {
 if (isInIframe) {
   checkAndInject()
 
-  const observer = new MutationObserver(() => {
-    if (document.querySelector('#dms-helper-csv-btn')) {
-      observer.disconnect()
-      return
-    }
-    checkAndInject()
+  // 防抖：避免 MutationObserver 高频触发
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const debouncedCheck = (): void => {
+    clearTimeout(timer)
+    timer = setTimeout(checkAndInject, 100)
+  }
+
+  const observer = new MutationObserver(debouncedCheck)
+  // childList + subtree: 监听新结果面板加载
+  // attributes + attributeFilter: 监听 tab 切换时的 class 变化
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class'],
   })
-  observer.observe(document.body, { childList: true, subtree: true })
 }
