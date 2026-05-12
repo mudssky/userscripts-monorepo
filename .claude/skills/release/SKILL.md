@@ -53,7 +53,7 @@ pnpm changeset add --empty
 <中文变更描述>
 ```
 
-**包名规则**：必须与 `package.json` 中的 `name` 一致（含 `@mudssky/` scope）。
+**包名规则**：必须与 `package.json` 中的 `name` 一致。userscripts 不带 scope，`userscript-utils` 带 `@mudssky/` scope。
 
 | 版本类型 | 何时使用 |
 |---------|---------|
