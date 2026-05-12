@@ -1,5 +1,11 @@
 # dms-helper
 
+## 1.2.2
+
+### Patch Changes
+
+- [`39d14e3`](https://github.com/mudssky/userscripts-monorepo/commit/39d14e3360a797d360dafca78337fd4fb0280d84) Thanks [@mudssky](https://github.com/mudssky)! - 移除主页面 DOM Debugger 菜单，仅在 iframe 内注册，避免菜单重复
+
 ## 1.2.1
 
 ### Patch Changes

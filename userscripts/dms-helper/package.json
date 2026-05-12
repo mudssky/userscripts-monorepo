@@ -1,7 +1,7 @@
 {
   "name": "@mudssky/dms-helper",
   "private": true,
-  "version": "1.2.1",
+  "version": "1.2.2",
   "type": "module",
   "homepage": "https://github.com/mudssky/dms-helper",
   "description": "阿里云 DMS 查询结果表格复制工具（CSV & Markdown）",
