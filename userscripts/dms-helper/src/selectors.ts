@@ -6,10 +6,17 @@ export const SELECTORS = {
   toolbar: '.bar-top',
   /** 表格 */
   table: '.art-table',
+  /** 表格滚动主体 */
+  tableBody: '.art-table-body',
+  /** 可能承载虚拟滚动的表格容器 */
+  tableScrollCandidates:
+    '.art-table-wrapper, .art-table-body, .art-table-body-wrapper, .art-table-scroll, .art-table-container, .art-table-content, .dui-use-virtual, .next-table-body, .next-table-body-wrapper, .next-table-scroller, .next-table-scroll, [class*="virtual"], [class*="Virtual"], [class*="scroll"], [class*="Scroll"]',
   /** 表头行 */
   headerRow: '.art-table-header-row',
   /** 数据行 */
   bodyRows: '.art-table-body .art-table-row',
+  /** 数据单元格 */
+  bodyCell: '.art-table-cell',
   /** 文本元素 */
   headerText: '.text',
   /** 单元格文本 */

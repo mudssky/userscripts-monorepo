@@ -1,7 +1,13 @@
-import { toCSV, toMarkdown, parseTable } from './format'
+import { COPY_CONFIG } from './config'
+import { toCSV, toMarkdown, type TableData } from './format'
+import { collectTableData } from './table-collector'
 
 /**
  * 复制文本到剪贴板
+ *
+ * @param text - 待复制文本
+ * @param type - 复制内容类型
+ * @returns 复制完成后的 Promise
  */
 export async function copyText(text: string, type: string): Promise<void> {
   try {
@@ -26,6 +32,9 @@ export async function copyText(text: string, type: string): Promise<void> {
 
 /**
  * 显示 Toast 提示
+ *
+ * @param message - 提示内容
+ * @returns 无返回值
  */
 export function showToast(message: string): void {
   document.getElementById('dms-custom-toast')?.remove()
@@ -48,34 +57,95 @@ export function showToast(message: string): void {
   }, 2500)
 }
 
-/** 移除已注入的按钮 */
+/**
+ * 移除已注入的按钮
+ *
+ * @param toolbar - 结果工具栏元素
+ * @returns 无返回值
+ */
 function removeInjectedButtons(toolbar: Element): void {
   toolbar.querySelectorAll('#dms-helper-csv-btn, #dms-helper-md-btn').forEach((btn) => btn.remove())
 }
 
-/** 创建操作按钮并注入到工具栏 */
+/**
+ * 确认是否继续复制长表格
+ *
+ * @param rowLimit - 长表格确认阈值
+ * @returns 用户是否确认继续复制全部数据
+ */
+function confirmLargeCopy(rowLimit: number): boolean {
+  return window.confirm(
+    `检测到查询结果超过 ${rowLimit} 行，完整复制可能会比较慢。\n\n点击“确定”继续完整复制，点击“取消”只复制前 ${rowLimit} 行。`,
+  )
+}
+
+/**
+ * 复制格式化后的表格数据
+ *
+ * @param resultContainer - 查询结果容器
+ * @param type - 复制内容类型
+ * @param formatter - 表格格式化函数
+ * @returns 复制完成后的 Promise
+ */
+async function copyFormattedTable(
+  resultContainer: Element,
+  type: string,
+  formatter: (data: TableData | null) => string,
+): Promise<void> {
+  showToast(`正在收集 ${type} 数据...`)
+
+  const result = await collectTableData(resultContainer, {
+    rowLimit: COPY_CONFIG.slowRowThreshold,
+    confirmLargeCopy,
+  })
+  const text = formatter(result.data)
+
+  if (!text) {
+    showToast('❌ 未找到可复制的表格数据')
+    return
+  }
+
+  const copiedType = result.truncated ? `${type}（前 ${result.rowLimit} 行）` : type
+  await copyText(text, copiedType)
+}
+
+/**
+ * 创建操作按钮并注入到工具栏
+ *
+ * @param toolbar - 结果工具栏元素
+ * @param resultContainer - 查询结果容器
+ * @returns 无返回值
+ */
 export function injectButtons(toolbar: Element, resultContainer: Element): void {
   if (toolbar.querySelector('#dms-helper-csv-btn')) return
 
-  const createBtn = (text: string, onClick: () => void): HTMLButtonElement => {
+  /**
+   * 创建复制按钮
+   *
+   * @param text - 按钮文本
+   * @param onClick - 点击回调
+   * @returns 按钮元素
+   */
+  const createBtn = (text: string, onClick: () => Promise<void>): HTMLButtonElement => {
     const btn = document.createElement('button')
     btn.className = 'next-btn next-small next-btn-normal is-wind'
     btn.style.marginLeft = '8px'
     btn.textContent = text
-    btn.onclick = onClick
+    btn.onclick = () => {
+      btn.disabled = true
+      onClick()
+        .catch(() => showToast('❌ 复制失败'))
+        .finally(() => {
+          btn.disabled = false
+        })
+    }
     return btn
   }
 
-  const csvBtn = createBtn('复制 CSV', () => {
-    const data = parseTable(resultContainer)
-    if (data) copyText(toCSV(data), 'CSV')
-  })
+  const csvBtn = createBtn('复制 CSV', () => copyFormattedTable(resultContainer, 'CSV', toCSV))
   csvBtn.id = 'dms-helper-csv-btn'
 
-  const mdBtn = createBtn('复制 Markdown', () => {
-    const data = parseTable(resultContainer)
-    if (data) copyText(toMarkdown(data), 'Markdown')
-  })
+  const mdBtn = createBtn('复制 Markdown', () => copyFormattedTable(resultContainer, 'Markdown', toMarkdown))
   mdBtn.id = 'dms-helper-md-btn'
 
   toolbar.appendChild(csvBtn)
