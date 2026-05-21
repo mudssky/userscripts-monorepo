@@ -1,5 +1,11 @@
 # dms-helper
 
+## 1.3.0
+
+### Minor Changes
+
+- [`65136a5`](https://github.com/mudssky/userscripts-monorepo/commit/65136a524d7f60a4fe52a9e0038d2f0bc94d5a85) Thanks [@mudssky](https://github.com/mudssky)! - 支持虚拟滚动表格复制完整已加载结果，并为长表格复制增加 300 行确认阈值
+
 ## 1.2.2
 
 ### Patch Changes
