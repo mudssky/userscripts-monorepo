@@ -80,3 +80,36 @@ git subtree add 导入 github-enhance 到 monorepo；将 subtree-pull.ts 升级�
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: dms-helper CSV 导出优先复制
+
+**Date**: 2026-05-26
+**Task**: dms-helper CSV 导出优先复制
+**Branch**: `main`
+
+### Summary
+
+为 dms-helper 增加 CSV 原生导出优先复制、油猴菜单持久切换复制模式、导出失败自动回退 DOM 复制，并同步 README、changeset 与 frontend userscript hook 规范。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `2cd4cff` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
