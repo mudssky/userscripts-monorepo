@@ -1,4 +1,6 @@
 import { COPY_CONFIG } from './config'
+import { getCopyMode } from './copy-mode'
+import { exportNativeCsv } from './csv-exporter'
 import { toCSV, toMarkdown, type TableData } from './format'
 import { collectTableData } from './table-collector'
 
@@ -110,6 +112,40 @@ async function copyFormattedTable(
 }
 
 /**
+ * 使用现有 DOM/虚拟滚动收集逻辑复制 CSV
+ *
+ * @param resultContainer - 查询结果容器
+ * @returns 复制完成后的 Promise
+ */
+async function copyCsvFromDom(resultContainer: Element): Promise<void> {
+  await copyFormattedTable(resultContainer, 'CSV', toCSV)
+}
+
+/**
+ * 优先使用 DMS 原生导出能力复制 CSV，失败时回退到 DOM 复制模式
+ *
+ * @param resultContainer - 查询结果容器
+ * @returns 复制完成后的 Promise
+ */
+async function copyCsvWithPreferredMode(resultContainer: Element): Promise<void> {
+  if (getCopyMode() === 'dom') {
+    await copyCsvFromDom(resultContainer)
+    return
+  }
+
+  showToast('正在通过 DMS 导出 CSV...')
+  const exportResult = await exportNativeCsv(resultContainer)
+
+  if (exportResult) {
+    await copyText(exportResult.csvText, 'CSV（导出）')
+    return
+  }
+
+  showToast('⚠️ 未捕获到导出 CSV，已切换为复制模式')
+  await copyCsvFromDom(resultContainer)
+}
+
+/**
  * 创建操作按钮并注入到工具栏
  *
  * @param toolbar - 结果工具栏元素
@@ -142,7 +178,7 @@ export function injectButtons(toolbar: Element, resultContainer: Element): void 
     return btn
   }
 
-  const csvBtn = createBtn('复制 CSV', () => copyFormattedTable(resultContainer, 'CSV', toCSV))
+  const csvBtn = createBtn('复制 CSV', () => copyCsvWithPreferredMode(resultContainer))
   csvBtn.id = 'dms-helper-csv-btn'
 
   const mdBtn = createBtn('复制 Markdown', () => copyFormattedTable(resultContainer, 'Markdown', toMarkdown))

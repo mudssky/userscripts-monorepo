@@ -15,7 +15,7 @@ export default defineConfig({
         version: packageJson.version,
         license: packageJson.license,
         'run-at': 'document-end',
-        grant: ['GM_registerMenuCommand', 'GM_setClipboard', 'GM_notification'],
+        grant: ['GM_registerMenuCommand', 'GM_setClipboard', 'GM_notification', 'GM_getValue', 'GM_setValue'],
         homepage: packageJson.homepage,
         supportURL: 'https://github.com/mudssky/userscripts-monorepo/issues',
         updateURL: 'https://github.com/mudssky/userscripts-monorepo/releases/latest/download/dms-helper.user.js',

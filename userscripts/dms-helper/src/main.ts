@@ -1,6 +1,7 @@
 import { SELECTORS } from './selectors'
 import { injectButtons, removeInjectedButtons } from './ui'
 import { registerDomDebuggerMenu } from '@mudssky/userscript-utils'
+import { registerCopyModeMenu } from './copy-mode'
 
 const isInIframe = window.self !== window.top
 
@@ -36,6 +37,7 @@ function checkAndInject(): void {
 
 /** 注册 DOM Debugger 诊断菜单 —— 仅在 iframe（SQL 控制台）内 */
 if (isInIframe) {
+  registerCopyModeMenu()
   registerDomDebuggerMenu({
     scriptName: 'DMS Helper',
     selectors: {
