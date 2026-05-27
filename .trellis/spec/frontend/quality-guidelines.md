@@ -37,6 +37,7 @@
 - 配置文件或用户输入进入业务逻辑前必须校验。
 - 修改常量、配置、脚本名、metadata、subtree prefix 前必须先全局搜索引用。
 - 资源初始化要有对应清理路径，尤其是高亮器、style 标签、定时器和事件监听。
+- 带 `GM_setClipboard` grant 的 userscript 应优先使用 `GM_setClipboard` 写剪贴板，再回退到 `navigator.clipboard`；宿主 iframe 或扩展沙箱内可能被 Permissions Policy 阻止 Clipboard API。
 - 带 `grant` 的 userscript 若需要 hook 宿主页面自身 JS（如 `fetch`、`XMLHttpRequest`、`URL.createObjectURL`），应注入页面上下文执行，并通过 `CustomEvent` 等显式通道传回结果；hook 必须限定在用户操作窗口内，并在成功、失败、超时后恢复原函数。
 
 ---

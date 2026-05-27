@@ -2,10 +2,19 @@ import { SELECTORS } from './selectors'
 import { injectButtons, removeInjectedButtons } from './ui'
 import { registerDomDebuggerMenu } from '@mudssky/userscript-utils'
 import { registerCopyModeMenu } from './copy-mode'
+import { hasActiveExecutionResult } from './result-context'
 
 const isInIframe = window.self !== window.top
+const isSqlConsolePage =
+  window.location.hostname === 'dmsnext.console.aliyun.com' &&
+  window.location.pathname.startsWith('/_console/sql-console')
+const shouldRunInCurrentPage = isInIframe || isSqlConsolePage
 
-/** 获取当前活动执行结果 tab 的结果容器 */
+/**
+ * 获取当前活动执行结果 tab 的结果容器
+ *
+ * @returns 当前活动结果容器；不存在时返回 null
+ */
 function getActiveResultContainer(): Element | null {
   const resultAreas = document.querySelectorAll(SELECTORS.resultContainer)
   for (const resultArea of resultAreas) {
@@ -13,12 +22,29 @@ function getActiveResultContainer(): Element | null {
     if (resultArea.closest('.next-tabs-tabpane.hidden')) {
       continue
     }
+    if (isPanelResult(resultArea) && !hasActiveExecutionResult(resultArea)) {
+      continue
+    }
     return resultArea
   }
   return null
 }
 
-/** 检查并注入/移除按钮 */
+/**
+ * 判断是否为新版 SQL Console 结果面板
+ *
+ * @param element - 待判断的结果容器
+ * @returns 是否为新版结果面板
+ */
+function isPanelResult(element: Element): boolean {
+  return element.matches('.panel-result')
+}
+
+/**
+ * 检查并注入或移除复制按钮
+ *
+ * @returns 无返回值
+ */
 function checkAndInject(): void {
   const resultAreas = document.querySelectorAll(SELECTORS.resultContainer)
   const activeResultArea = getActiveResultContainer()
@@ -35,8 +61,8 @@ function checkAndInject(): void {
   })
 }
 
-/** 注册 DOM Debugger 诊断菜单 —— 仅在 iframe（SQL 控制台）内 */
-if (isInIframe) {
+/** 注册 DOM Debugger 诊断菜单 —— 仅在 SQL 控制台运行环境内 */
+if (shouldRunInCurrentPage) {
   registerCopyModeMenu()
   registerDomDebuggerMenu({
     scriptName: 'DMS Helper',
@@ -52,8 +78,8 @@ if (isInIframe) {
   })
 }
 
-// 仅在 iframe（SQL 控制台）内执行按钮注入
-if (isInIframe) {
+// 仅在 SQL 控制台运行环境内执行按钮注入
+if (shouldRunInCurrentPage) {
   checkAndInject()
 
   // 防抖：避免 MutationObserver 高频触发

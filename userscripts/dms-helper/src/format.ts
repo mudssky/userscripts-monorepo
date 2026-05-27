@@ -1,4 +1,5 @@
 import { SELECTORS } from './selectors'
+import { findActiveExecutionResultTable } from './result-context'
 
 /** 表格数据结构 */
 export interface TableData {
@@ -13,7 +14,12 @@ export interface TableData {
  * @returns 表格元素或 null
  */
 export function findTable(resultContainer?: Element | null): Element | null {
-  return (resultContainer ?? document).querySelector(SELECTORS.table)
+  const container = resultContainer ?? document
+  if (container.querySelector('.sql-console-results-tab')) {
+    return findActiveExecutionResultTable(container)
+  }
+
+  return container.querySelector(SELECTORS.table)
 }
 
 /**

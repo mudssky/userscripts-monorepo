@@ -1,3 +1,4 @@
+import { GM_setClipboard } from '$'
 import { COPY_CONFIG } from './config'
 import { getCopyMode } from './copy-mode'
 import { exportNativeCsv } from './csv-exporter'
@@ -12,6 +13,16 @@ import { collectTableData } from './table-collector'
  * @returns 复制完成后的 Promise
  */
 export async function copyText(text: string, type: string): Promise<void> {
+  if (typeof GM_setClipboard !== 'undefined') {
+    try {
+      GM_setClipboard(text, 'text')
+      showToast(`✅ ${type} 已复制到剪贴板`)
+      return
+    } catch {
+      console.warn('[DMS Helper] GM_setClipboard 复制失败，尝试浏览器剪贴板')
+    }
+  }
+
   try {
     await navigator.clipboard.writeText(text)
     showToast(`✅ ${type} 已复制到剪贴板`)
@@ -100,6 +111,12 @@ async function copyFormattedTable(
     rowLimit: COPY_CONFIG.slowRowThreshold,
     confirmLargeCopy,
   })
+
+  if (!result.data || result.data.rows.length === 0) {
+    showToast('❌ 未找到可复制的表格数据')
+    return
+  }
+
   const text = formatter(result.data)
 
   if (!text) {
@@ -122,22 +139,28 @@ async function copyCsvFromDom(resultContainer: Element): Promise<void> {
 }
 
 /**
- * 优先使用 DMS 原生导出能力复制 CSV，失败时回退到 DOM 复制模式
+ * 优先使用 DMS 原生导出能力复制 CSV，只有导出能力不存在时回退 DOM
  *
  * @param resultContainer - 查询结果容器
  * @returns 复制完成后的 Promise
  */
 async function copyCsvWithPreferredMode(resultContainer: Element): Promise<void> {
   if (getCopyMode() === 'dom') {
+    showToast('⚠️ 当前为复制模式，将复制页面 DOM 中已渲染内容')
     await copyCsvFromDom(resultContainer)
     return
   }
 
-  showToast('正在通过 DMS 导出 CSV...')
-  const exportResult = await exportNativeCsv(resultContainer)
+  showToast('正在调用 DMS 导出接口...')
+  const exportAttempt = await exportNativeCsv(resultContainer)
 
-  if (exportResult) {
-    await copyText(exportResult.csvText, 'CSV（导出）')
+  if (exportAttempt.result) {
+    await copyText(exportAttempt.result.csvText, 'CSV（导出）')
+    return
+  }
+
+  if (exportAttempt.exportButtonFound) {
+    showToast(`❌ DMS 导出接口失败：${exportAttempt.error ?? '未返回 CSV'}`)
     return
   }
 
