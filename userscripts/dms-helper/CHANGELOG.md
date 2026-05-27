@@ -1,5 +1,15 @@
 # dms-helper
 
+## 1.4.0
+
+### Minor Changes
+
+- [`5446471`](https://github.com/mudssky/userscripts-monorepo/commit/54464712ad57f3ba7ba8361b99d377911bcd9136) Thanks [@mudssky](https://github.com/mudssky)! - 修复 CSV 复制优先调用 DMS 导出执行器，并提升 Edge/Tampermonkey 沙箱内剪贴板写入稳定性。
+
+### Patch Changes
+
+- [`2cd4cff`](https://github.com/mudssky/userscripts-monorepo/commit/2cd4cff49213b5be9db9a8a12762d73e1d6959cb) Thanks [@mudssky](https://github.com/mudssky)! - CSV 复制默认优先复用 DMS 原生导出，并支持通过油猴菜单持久切换复制模式。
+
 ## 1.3.0
 
 ### Minor Changes
