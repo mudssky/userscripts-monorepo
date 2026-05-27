@@ -113,3 +113,38 @@ git subtree add 导入 github-enhance 到 monorepo；将 subtree-pull.ts 升级�
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: 修复并发布 dms-helper CSV 导出复制
+
+**Date**: 2026-05-27
+**Task**: 修复并发布 dms-helper CSV 导出复制
+**Branch**: `main`
+
+### Summary
+
+完成 dms-helper CSV 复制改造：按活动执行结果 tab 调用 DMS executor 导出完整 CSV，修复对象行转换与剪贴板写入，发布 dms-helper@1.4.0，并归档 dms-helper 迁移与预览验证任务。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5446471` | (see git log) |
+| `8492811` | (see git log) |
+| `28bedb2` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
