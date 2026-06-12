@@ -4,6 +4,7 @@ export type PreferredModeStrategy = 'expert-first'
 export interface AssistantConfig {
   enabled: boolean
   preferredModeStrategy: PreferredModeStrategy
+  modeSwitchConfirmMs: number
 }
 
 export interface AppConfig {
@@ -13,6 +14,8 @@ export interface AppConfig {
 }
 
 export const CONFIG_STORAGE_KEY = 'aiAssistantEnhancerConfig'
+export const MIN_MODE_SWITCH_CONFIRM_MS = 500
+export const MAX_MODE_SWITCH_CONFIRM_MS = 5000
 
 export const DEFAULT_CONFIG: AppConfig = {
   enabled: true,
@@ -21,6 +24,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     doubao: {
       enabled: true,
       preferredModeStrategy: 'expert-first',
+      modeSwitchConfirmMs: 1600,
     },
   },
 }
@@ -33,6 +37,23 @@ export const DEFAULT_CONFIG: AppConfig = {
  */
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/**
+ * 归一化模式切换确认时长。
+ *
+ * @param value - 未知来源的确认时长
+ * @returns 已限制范围的确认时长
+ */
+export function normalizeModeSwitchConfirmMs(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return DEFAULT_CONFIG.assistants.doubao.modeSwitchConfirmMs
+  }
+
+  return Math.min(
+    MAX_MODE_SWITCH_CONFIRM_MS,
+    Math.max(MIN_MODE_SWITCH_CONFIRM_MS, Math.round(value)),
+  )
 }
 
 /**
@@ -69,6 +90,9 @@ export function normalizeConfig(value: unknown): AppConfig {
             ? doubao.enabled
             : DEFAULT_CONFIG.assistants.doubao.enabled,
         preferredModeStrategy,
+        modeSwitchConfirmMs: normalizeModeSwitchConfirmMs(
+          doubao.modeSwitchConfirmMs,
+        ),
       },
     },
   }

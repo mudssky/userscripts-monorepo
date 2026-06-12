@@ -59,7 +59,9 @@ export function createEnhancerController(options: EnhancerControllerOptions) {
     statusStore.setStatus(createDoubaoStatus('waiting', '正在检查豆包模式'))
 
     try {
-      const result = await adapter.switchToBestMode()
+      const result = await adapter.switchToBestMode({
+        modeSwitchConfirmMs: config.assistants.doubao.modeSwitchConfirmMs,
+      })
       if (result.mode === 'expert') {
         statusStore.setStatus(createDoubaoStatus('expert', result.reason))
       } else if (result.mode === 'thinking') {

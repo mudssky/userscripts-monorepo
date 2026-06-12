@@ -1,6 +1,11 @@
 import { Bot, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import type { JSX } from 'react'
-import type { AppConfig } from '@/config'
+import {
+  type AppConfig,
+  MAX_MODE_SWITCH_CONFIRM_MS,
+  MIN_MODE_SWITCH_CONFIRM_MS,
+  normalizeModeSwitchConfirmMs,
+} from '@/config'
 import { cn } from '@/lib/utils'
 import type { SwitchStatus } from '@/status'
 import { Badge } from './ui/badge'
@@ -141,6 +146,26 @@ export function SettingsPanel({
     })
   }
 
+  /**
+   * 更新模式切换确认时长。
+   *
+   * @param value - 输入框字符串值
+   * @returns 无返回值
+   */
+  function updateModeSwitchConfirmMs(value: string): void {
+    const modeSwitchConfirmMs = normalizeModeSwitchConfirmMs(Number(value))
+    onConfigChange({
+      ...config,
+      assistants: {
+        ...config.assistants,
+        doubao: {
+          ...config.assistants.doubao,
+          modeSwitchConfirmMs,
+        },
+      },
+    })
+  }
+
   return (
     <div
       className={cn(
@@ -193,6 +218,32 @@ export function SettingsPanel({
               disabled={!config.enabled}
               onCheckedChange={updateDoubaoEnabled}
             />
+
+            <label className="flex flex-col gap-2 rounded-md border bg-background p-3">
+              <span className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium">切换确认延迟</span>
+                <span className="text-xs text-muted-foreground">毫秒</span>
+              </span>
+              <input
+                type="number"
+                min={MIN_MODE_SWITCH_CONFIRM_MS}
+                max={MAX_MODE_SWITCH_CONFIRM_MS}
+                step={100}
+                value={config.assistants.doubao.modeSwitchConfirmMs}
+                disabled={!config.enabled || !config.assistants.doubao.enabled}
+                className={cn(
+                  'h-8 rounded-md border bg-background px-2 text-sm outline-none transition-colors',
+                  'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                  'disabled:cursor-not-allowed disabled:opacity-50',
+                )}
+                onChange={(event) =>
+                  updateModeSwitchConfirmMs(event.currentTarget.value)
+                }
+              />
+              <span className="text-xs leading-5 text-muted-foreground">
+                专家切换较慢时调大；超时仍未变为专家才回退思考
+              </span>
+            </label>
 
             <div className="rounded-md border bg-muted/30 p-3">
               <div className="mb-1 flex items-center justify-between gap-3">

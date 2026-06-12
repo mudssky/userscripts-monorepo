@@ -48,6 +48,16 @@ function mountClosedModeTrigger(): HTMLButtonElement {
   return trigger
 }
 
+/**
+ * 读取模式按钮内层真实按钮。
+ *
+ * @param trigger - 外层模式触发按钮
+ * @returns 内层按钮
+ */
+function getModeChildButton(trigger: HTMLButtonElement): HTMLButtonElement {
+  return trigger.querySelector('button') as HTMLButtonElement
+}
+
 describe('doubaoAdapter', () => {
   beforeEach(() => {
     vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(
@@ -79,7 +89,7 @@ describe('doubaoAdapter', () => {
 
   it('点击嵌套的真实按钮打开模式菜单', async () => {
     const trigger = mountClosedModeTrigger()
-    const childButton = trigger.querySelector('button') as HTMLButtonElement
+    const childButton = getModeChildButton(trigger)
     childButton.addEventListener('click', () => {
       trigger.dataset.state = 'open'
       document.body.insertAdjacentHTML(
@@ -103,6 +113,62 @@ describe('doubaoAdapter', () => {
   it('把菜单按钮缺失和菜单打开失败区分开', async () => {
     await expect(__doubaoTestUtils.openModeMenu()).resolves.toBe(false)
   }, 6000)
+
+  it('等待专家模式异步生效后不回退思考', async () => {
+    const trigger = mountClosedModeTrigger()
+    const childButton = getModeChildButton(trigger)
+    childButton.addEventListener('click', () => {
+      trigger.dataset.state = 'open'
+      const menu = createModeMenu()
+      const expertItem = Array.from(
+        menu.querySelectorAll('[role="menuitem"]'),
+      ).find((item) => item.textContent?.includes('专家')) as HTMLDivElement
+      expertItem.addEventListener('click', () => {
+        window.setTimeout(() => {
+          childButton.textContent = '专家'
+          menu.remove()
+        }, 300)
+      })
+      document.body.append(menu)
+    })
+
+    await expect(
+      doubaoAdapter.switchToBestMode({
+        modeSwitchConfirmMs: 1200,
+      }),
+    ).resolves.toMatchObject({
+      mode: 'expert',
+      changed: true,
+    })
+  })
+
+  it('确认窗口太短时会进入回退流程', async () => {
+    const trigger = mountClosedModeTrigger()
+    const childButton = getModeChildButton(trigger)
+    childButton.addEventListener('click', () => {
+      trigger.dataset.state = 'open'
+      const menu = createModeMenu()
+      const expertItem = Array.from(
+        menu.querySelectorAll('[role="menuitem"]'),
+      ).find((item) => item.textContent?.includes('专家')) as HTMLDivElement
+      expertItem.addEventListener('click', () => {
+        window.setTimeout(() => {
+          childButton.textContent = '专家'
+          menu.remove()
+        }, 300)
+      })
+      document.body.append(menu)
+    })
+
+    await expect(
+      doubaoAdapter.switchToBestMode({
+        modeSwitchConfirmMs: 100,
+      }),
+    ).resolves.toMatchObject({
+      mode: 'fast',
+      changed: false,
+    })
+  })
 })
 
 /**

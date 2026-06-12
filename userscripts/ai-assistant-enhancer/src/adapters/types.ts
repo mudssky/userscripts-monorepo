@@ -6,11 +6,17 @@ export interface ModeSwitchResult {
   reason: string
 }
 
+export interface SwitchToBestModeOptions {
+  modeSwitchConfirmMs: number
+}
+
 export interface AssistantAdapter {
   id: 'doubao'
   name: string
   matches: (location: Location) => boolean
   getCurrentMode: () => AssistantMode
-  switchToBestMode: () => Promise<ModeSwitchResult>
+  switchToBestMode: (
+    options: SwitchToBestModeOptions,
+  ) => Promise<ModeSwitchResult>
   watch: (onChange: () => void) => () => void
 }

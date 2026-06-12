@@ -1,4 +1,9 @@
-import type { AssistantAdapter, AssistantMode, ModeSwitchResult } from './types'
+import type {
+  AssistantAdapter,
+  AssistantMode,
+  ModeSwitchResult,
+  SwitchToBestModeOptions,
+} from './types'
 
 const MODE_TEXT: Record<Exclude<AssistantMode, 'unknown'>, string> = {
   fast: '快速',
@@ -141,12 +146,44 @@ async function waitForElement<T>(
 }
 
 /**
+ * 等待模式切换完成或被登录弹窗阻断。
+ *
+ * @param mode - 目标模式
+ * @param timeoutMs - 最长等待毫秒数
+ * @returns 等待后的当前模式与是否出现登录弹窗
+ */
+async function waitForModeSwitch(
+  mode: Exclude<AssistantMode, 'unknown'>,
+  timeoutMs: number,
+): Promise<{ currentMode: AssistantMode; loginBlocked: boolean }> {
+  const startedAt = Date.now()
+  let currentMode = getCurrentMode()
+
+  while (Date.now() - startedAt <= timeoutMs) {
+    if (hasLoginDialog()) {
+      return { currentMode: getCurrentMode(), loginBlocked: true }
+    }
+
+    currentMode = getCurrentMode()
+    if (currentMode === mode) {
+      return { currentMode, loginBlocked: false }
+    }
+
+    await delay(100)
+  }
+
+  return { currentMode: getCurrentMode(), loginBlocked: hasLoginDialog() }
+}
+
+/**
  * 判断当前页面是否显示登录弹窗。
  *
  * @returns 是否显示登录弹窗
  */
 function hasLoginDialog(): boolean {
-  return document.body.innerText.includes(LOGIN_DIALOG_TEXT)
+  return (document.body.innerText ?? document.body.textContent ?? '').includes(
+    LOGIN_DIALOG_TEXT,
+  )
 }
 
 /**
@@ -325,6 +362,7 @@ function getCurrentMode(): AssistantMode {
  */
 async function chooseMode(
   mode: Exclude<AssistantMode, 'unknown'>,
+  confirmMs: number,
 ): Promise<ModeSwitchResult> {
   const menuOpened = await openModeMenu()
   if (!menuOpened) {
@@ -347,9 +385,9 @@ async function chooseMode(
   }
 
   clickElement(menuItem)
-  await delay(400)
+  const { currentMode, loginBlocked } = await waitForModeSwitch(mode, confirmMs)
 
-  if (hasLoginDialog()) {
+  if (loginBlocked) {
     closeLoginDialog()
     await delay(120)
     return {
@@ -359,7 +397,6 @@ async function chooseMode(
     }
   }
 
-  const currentMode = getCurrentMode()
   return {
     mode: currentMode,
     changed: currentMode === mode,
@@ -373,9 +410,12 @@ async function chooseMode(
 /**
  * 切换到豆包最佳可用模式。
  *
+ * @param options - 切换配置
  * @returns 切换结果
  */
-async function switchToBestMode(): Promise<ModeSwitchResult> {
+async function switchToBestMode(
+  options: SwitchToBestModeOptions,
+): Promise<ModeSwitchResult> {
   const currentMode = getCurrentMode()
   if (currentMode === 'expert' || currentMode === 'thinking') {
     return {
@@ -385,12 +425,15 @@ async function switchToBestMode(): Promise<ModeSwitchResult> {
     }
   }
 
-  const expertResult = await chooseMode('expert')
+  const expertResult = await chooseMode('expert', options.modeSwitchConfirmMs)
   if (expertResult.mode === 'expert') {
     return expertResult
   }
 
-  const thinkingResult = await chooseMode('thinking')
+  const thinkingResult = await chooseMode(
+    'thinking',
+    options.modeSwitchConfirmMs,
+  )
   if (thinkingResult.mode === 'thinking') {
     return {
       ...thinkingResult,

@@ -48,6 +48,9 @@ describe('createEnhancerController', () => {
 
     expect(statusStore.getStatus().kind).toBe('fallback-thinking')
     expect(statusStore.getStatus().message).toContain('回退')
+    expect(adapter.switchToBestMode).toHaveBeenCalledWith({
+      modeSwitchConfirmMs: DEFAULT_CONFIG.assistants.doubao.modeSwitchConfirmMs,
+    })
   })
 
   it('does not switch when global config is disabled', async () => {

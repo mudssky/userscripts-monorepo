@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CONFIG, isDoubaoEnabled, normalizeConfig } from './config'
+import {
+  DEFAULT_CONFIG,
+  isDoubaoEnabled,
+  normalizeConfig,
+  normalizeModeSwitchConfirmMs,
+} from './config'
 
 describe('normalizeConfig', () => {
   it('returns defaults for invalid input', () => {
@@ -23,9 +28,33 @@ describe('normalizeConfig', () => {
         doubao: {
           enabled: false,
           preferredModeStrategy: 'expert-first',
+          modeSwitchConfirmMs:
+            DEFAULT_CONFIG.assistants.doubao.modeSwitchConfirmMs,
         },
       },
     })
+  })
+
+  it('normalizes mode switch confirm delay', () => {
+    expect(
+      normalizeConfig({
+        assistants: {
+          doubao: {
+            modeSwitchConfirmMs: 2200,
+          },
+        },
+      }).assistants.doubao.modeSwitchConfirmMs,
+    ).toBe(2200)
+  })
+})
+
+describe('normalizeModeSwitchConfirmMs', () => {
+  it('clamps invalid and out-of-range values', () => {
+    expect(normalizeModeSwitchConfirmMs('fast')).toBe(
+      DEFAULT_CONFIG.assistants.doubao.modeSwitchConfirmMs,
+    )
+    expect(normalizeModeSwitchConfirmMs(100)).toBe(500)
+    expect(normalizeModeSwitchConfirmMs(8000)).toBe(5000)
   })
 })
 

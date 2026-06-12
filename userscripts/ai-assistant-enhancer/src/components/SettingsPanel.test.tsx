@@ -90,6 +90,33 @@ describe('SettingsPanel', () => {
     })
   })
 
+  it('updates mode switch confirm delay', () => {
+    const onConfigChange = vi.fn()
+    render(
+      <SettingsPanel
+        config={{ ...DEFAULT_CONFIG, panelCollapsed: false }}
+        status={createDoubaoStatus('idle', '等待页面加载')}
+        onConfigChange={onConfigChange}
+        onRunNow={vi.fn()}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText(/切换确认延迟/), {
+      target: { value: '2600' },
+    })
+
+    expect(onConfigChange).toHaveBeenCalledWith({
+      ...DEFAULT_CONFIG,
+      panelCollapsed: false,
+      assistants: {
+        doubao: {
+          ...DEFAULT_CONFIG.assistants.doubao,
+          modeSwitchConfirmMs: 2600,
+        },
+      },
+    })
+  })
+
   it('disables doubao switch when global switch is off', () => {
     render(
       <SettingsPanel
