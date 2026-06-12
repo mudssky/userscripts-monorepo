@@ -22,6 +22,7 @@ const MODE_TRIGGER_SELECTOR = [
 ].join(',')
 const LOGIN_DIALOG_TEXT = '登录以解锁更多功能'
 const NEW_CHAT_TEXT = '新对话'
+const NEW_CHAT_TRIGGER_TEXT_MAX_LENGTH = 30
 const MODE_TRIGGER_WAIT_MS = 5000
 const MODE_MENU_WAIT_MS = 1800
 
@@ -277,6 +278,32 @@ function getModeFromTrigger(trigger: HTMLElement): AssistantMode {
 }
 
 /**
+ * 判断点击目标是否属于新对话入口。
+ *
+ * @param target - 点击事件目标
+ * @returns 是否点击了新对话入口
+ */
+function isNewChatClickTarget(target: Element): boolean {
+  let current: Element | null = target
+
+  while (current && current !== document.body) {
+    const text = getElementText(current)
+    if (
+      text.includes(NEW_CHAT_TEXT) &&
+      !MODE_LABELS.some((label) => text.includes(label)) &&
+      text.length <= NEW_CHAT_TRIGGER_TEXT_MAX_LENGTH &&
+      isVisibleElement(current)
+    ) {
+      return true
+    }
+
+    current = current.parentElement
+  }
+
+  return false
+}
+
+/**
  * 查找指定模式菜单项。
  *
  * @param mode - 目标模式
@@ -455,33 +482,17 @@ async function switchToBestMode(
  * @returns 取消监听函数
  */
 function watch(onChange: () => void): () => void {
-  const observer = new MutationObserver((records) => {
-    const shouldCheck = records.some((record) => {
-      const targetText =
-        record.target instanceof Element ? getElementText(record.target) : ''
-      return (
-        targetText.includes(NEW_CHAT_TEXT) ||
-        targetText.includes(MODE_TEXT.fast) ||
-        targetText.includes(MODE_TEXT.thinking) ||
-        targetText.includes(MODE_TEXT.expert)
-      )
-    })
-
-    if (shouldCheck) {
+  const handleClick = (event: MouseEvent): void => {
+    if (event.target instanceof Element && isNewChatClickTarget(event.target)) {
       onChange()
     }
-  })
+  }
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    characterData: true,
-  })
-
+  document.addEventListener('click', handleClick, true)
   window.addEventListener('popstate', onChange)
 
   return () => {
-    observer.disconnect()
+    document.removeEventListener('click', handleClick, true)
     window.removeEventListener('popstate', onChange)
   }
 }
@@ -501,5 +512,6 @@ export const __doubaoTestUtils = {
   findModeTrigger,
   findModeClickTarget,
   getCurrentMode,
+  isNewChatClickTarget,
   openModeMenu,
 }

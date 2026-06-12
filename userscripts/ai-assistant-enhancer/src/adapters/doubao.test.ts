@@ -169,6 +169,35 @@ describe('doubaoAdapter', () => {
       changed: false,
     })
   })
+
+  it('监听新对话点击但不监听模式文案变化', () => {
+    const onChange = vi.fn()
+    const cleanup = doubaoAdapter.watch(onChange)
+    document.body.innerHTML = `
+      <div>
+        <button data-slot="dropdown-menu-trigger">快速</button>
+        <div class="mode-label">思考</div>
+        <button class="new-chat">新对话</button>
+      </div>
+    `
+
+    document
+      .querySelector('[data-slot="dropdown-menu-trigger"]')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    const modeLabel = document.querySelector('.mode-label')
+    if (modeLabel) {
+      modeLabel.textContent = '专家'
+    }
+
+    expect(onChange).not.toHaveBeenCalled()
+
+    document
+      .querySelector('.new-chat')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+
+    expect(onChange).toHaveBeenCalledTimes(1)
+    cleanup()
+  })
 })
 
 /**

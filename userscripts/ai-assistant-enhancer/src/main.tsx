@@ -70,7 +70,7 @@ function mountPanel(): void {
       onRunNow={() => {
         void controller.runOnce()
       }}
-      onConfigChanged={() => controller.scheduleRun()}
+      onConfigChanged={() => undefined}
     />,
     container,
   )
