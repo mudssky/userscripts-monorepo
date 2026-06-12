@@ -9,7 +9,10 @@ export interface EnhancerControllerOptions {
   getConfig: () => AppConfig
   statusStore: ReturnType<typeof createStatusStore>
   debounceMs?: number
+  autoRetryDelaysMs?: readonly number[]
 }
+
+const DEFAULT_AUTO_RETRY_DELAYS_MS = [300, 1500, 3000] as const
 
 /**
  * 创建自动切换控制器。
@@ -18,21 +21,52 @@ export interface EnhancerControllerOptions {
  * @returns 控制器启动与停止接口
  */
 export function createEnhancerController(options: EnhancerControllerOptions) {
-  const { adapter, getConfig, statusStore, debounceMs = 300 } = options
+  const {
+    adapter,
+    getConfig,
+    statusStore,
+    debounceMs = 300,
+    autoRetryDelaysMs = DEFAULT_AUTO_RETRY_DELAYS_MS,
+  } = options
   let cleanupWatcher: (() => void) | undefined
   let timer: ReturnType<typeof window.setTimeout> | undefined
+  const autoTimers = new Set<ReturnType<typeof window.setTimeout>>()
   let running = false
+  let rerunAfterCurrent = false
 
   /**
-   * 清理待执行任务。
+   * 清理单次待执行任务。
    *
    * @returns 无返回值
    */
-  function clearPendingRun(): void {
+  function clearScheduledRun(): void {
     if (timer) {
       window.clearTimeout(timer)
       timer = undefined
     }
+  }
+
+  /**
+   * 清理自动复查任务。
+   *
+   * @returns 无返回值
+   */
+  function clearAutoRuns(): void {
+    for (const autoTimer of autoTimers) {
+      window.clearTimeout(autoTimer)
+    }
+    autoTimers.clear()
+  }
+
+  /**
+   * 清理所有待执行任务。
+   *
+   * @returns 无返回值
+   */
+  function clearPendingRun(): void {
+    clearScheduledRun()
+    clearAutoRuns()
+    rerunAfterCurrent = false
   }
 
   /**
@@ -81,7 +115,25 @@ export function createEnhancerController(options: EnhancerControllerOptions) {
       )
     } finally {
       running = false
+      if (rerunAfterCurrent) {
+        rerunAfterCurrent = false
+        scheduleRun()
+      }
     }
+  }
+
+  /**
+   * 执行计划任务；若上一轮仍在运行，则在结束后补一次检查。
+   *
+   * @returns 无返回值
+   */
+  function runScheduledOnce(): void {
+    if (running) {
+      rerunAfterCurrent = true
+      return
+    }
+
+    void runOnce()
   }
 
   /**
@@ -92,8 +144,25 @@ export function createEnhancerController(options: EnhancerControllerOptions) {
   function scheduleRun(): void {
     clearPendingRun()
     timer = window.setTimeout(() => {
-      void runOnce()
+      timer = undefined
+      runScheduledOnce()
     }, debounceMs)
+  }
+
+  /**
+   * 调度一组自动复查，覆盖豆包新对话后延迟重置默认模型的时序。
+   *
+   * @returns 无返回值
+   */
+  function scheduleAutoRun(): void {
+    clearPendingRun()
+    for (const delayMs of autoRetryDelaysMs) {
+      const autoTimer = window.setTimeout(() => {
+        autoTimers.delete(autoTimer)
+        runScheduledOnce()
+      }, delayMs)
+      autoTimers.add(autoTimer)
+    }
   }
 
   return {
@@ -101,8 +170,8 @@ export function createEnhancerController(options: EnhancerControllerOptions) {
       if (cleanupWatcher) {
         return
       }
-      cleanupWatcher = adapter.watch(scheduleRun)
-      scheduleRun()
+      cleanupWatcher = adapter.watch(scheduleAutoRun)
+      scheduleAutoRun()
     },
     stop: (): void => {
       clearPendingRun()
@@ -111,5 +180,6 @@ export function createEnhancerController(options: EnhancerControllerOptions) {
     },
     runOnce,
     scheduleRun,
+    scheduleAutoRun,
   }
 }

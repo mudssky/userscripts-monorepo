@@ -92,4 +92,50 @@ describe('createEnhancerController', () => {
     expect(adapter.watch).toHaveBeenCalled()
     expect(adapter.matches(locationLike)).toBe(true)
   })
+
+  it('rechecks after watcher changes so delayed new-chat reset is corrected', async () => {
+    const statusStore = createStatusStore(createDoubaoStatus('idle', '等待'))
+    const adapter = createAdapter({
+      mode: 'expert',
+      changed: true,
+      reason: '已切换到专家',
+    })
+    vi.mocked(adapter.switchToBestMode)
+      .mockResolvedValueOnce({
+        mode: 'expert',
+        changed: false,
+        reason: '当前已是专家',
+      })
+      .mockResolvedValueOnce({
+        mode: 'expert',
+        changed: true,
+        reason: '已切换到专家',
+      })
+      .mockResolvedValueOnce({
+        mode: 'expert',
+        changed: true,
+        reason: '已切换到专家',
+      })
+    const controller = createEnhancerController({
+      adapter,
+      getConfig: () => DEFAULT_CONFIG,
+      statusStore,
+      autoRetryDelaysMs: [1, 100],
+    })
+
+    controller.start()
+    await vi.advanceTimersByTimeAsync(1)
+    expect(adapter.switchToBestMode).toHaveBeenCalledTimes(1)
+
+    const onChange = vi.mocked(adapter.watch).mock.calls[0]?.[0]
+    expect(onChange).toBeDefined()
+    onChange?.()
+
+    await vi.advanceTimersByTimeAsync(1)
+    expect(adapter.switchToBestMode).toHaveBeenCalledTimes(2)
+
+    await vi.advanceTimersByTimeAsync(99)
+    expect(adapter.switchToBestMode).toHaveBeenCalledTimes(3)
+    expect(statusStore.getStatus().message).toBe('已切换到专家')
+  })
 })
