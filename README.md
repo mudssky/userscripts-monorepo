@@ -8,6 +8,7 @@
 
 ```text
 userscripts/
+  ai-assistant-enhancer/
   highlight-keywords/
 ```
 
@@ -16,6 +17,9 @@ userscripts/
 ```bash
 pnpm install
 pnpm build
+pnpm dev:ai-assistant-enhancer
+pnpm build:ai-assistant-enhancer
+pnpm preview:ai-assistant-enhancer
 pnpm dev:highlight-keywords
 pnpm build:highlight-keywords
 pnpm preview:highlight-keywords
@@ -30,6 +34,8 @@ pnpm typecheck:scripts
 ```bash
 pnpm --filter highlight-keywords run build
 pnpm --filter ./userscripts/highlight-keywords run dev
+pnpm --filter ai-assistant-enhancer run build
+pnpm --filter ./userscripts/ai-assistant-enhancer run dev
 ```
 
 ## Subtree Maintenance

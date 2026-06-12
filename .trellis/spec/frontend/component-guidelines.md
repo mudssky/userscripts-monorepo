@@ -26,6 +26,8 @@
 - 局部组件放在功能目录的 `components/` 下，只服务当前功能时不要提升到全局共享目录。
 - 视图入口组件负责组合子组件、传递状态和绑定事件，不在模板里写复杂业务判断。
 - 复杂业务逻辑放到 `hook.ts`、`config.ts` 或 `util/` 中，组件只调用清晰的 handler。
+- React userscript 组件使用 `.tsx`，入口组件负责组合展示组件并通过 props 注入配置、状态和事件处理函数；不要在展示组件中直接读写 GM 存储或查询宿主页面 DOM。
+- React userscript 可在 `src/components/ui/` 放 shadcn 风格源码组件；业务组件放在 `src/components/`，只服务当前脚本时不要提升到共享包。
 
 示例：
 
@@ -62,6 +64,7 @@ function onToggleDarkMode() {
 - 子组件不直接修改 props；需要变更时通过 emit 通知父级。
 - 组件之间传递领域对象时复用 `types.ts` 的类型，例如 `HighlightState`、`DynamicColors`、`RuleItem`。
 - 对话框可使用 `:model-value` + `@update:model-value`，避免把内部状态和父级状态拆散。
+- React 组件 props 使用 `interface XxxProps` 显式定义，事件回调用 `onXxx` 命名并标注参数和返回值；组件内部只做轻量 UI 派生，不承载站点自动化流程。
 
 ---
 
@@ -69,6 +72,7 @@ function onToggleDarkMode() {
 
 - 当前复杂 UI 脚本使用 Tailwind 工具类、Element Plus 组件和少量 scoped CSS 组合。
 - userscript UI 默认挂载到 Shadow DOM 内，样式通过 `?style` 导入后注入 Shadow Root。
+- React + Tailwind userscript 推荐使用 `import styles from './index.css?inline'` 后传给 `createShadowContainer({ styles: [styles] })`，确保 Tailwind 样式进入 Shadow Root，而不是只通过 `GM_addStyle` 注入宿主页面。
 - Element Plus 弹窗在 Shadow DOM 内使用时要注意 `:teleported="false"`，避免弹窗被传送到宿主页导致样式隔离失效。
 - 组件级样式使用 `<style scoped>`；需要覆盖 Element Plus 内部结构时使用 `:deep(...)`。
 - 动态主题颜色集中由 `config.ts` 生成，例如 `generateDynamicColors()`，组件只消费结果。
@@ -87,6 +91,7 @@ function onToggleDarkMode() {
 ## Common Mistakes
 
 - 不要在子组件里直接读写 GM 存储、DOM 高亮器或全局配置；这些属于 hook 或工具函数职责。
+- 不要让 React 展示组件直接操作目标网站 DOM；站点 DOM 选择、点击、弹窗处理应放到 adapter/controller 模块。
 - 不要让组件直接 import 另一个 userscript 的 `src/` 文件。
 - 不要把 Element Plus 弹窗默认 teleport 到宿主页；在 Shadow DOM 场景下容易造成样式错位。
 - 不要把大量业务状态散落到多个组件里；优先收拢到功能 hook，再由视图入口分发给子组件。

@@ -27,6 +27,8 @@
 - 外部副作用集中在 hook 内处理，包括 GM 存储、DOM 操作、菜单注册、样式注入和调试日志。
 - `onUnmounted()` 必须清理高亮器、全局样式、定时器等资源。
 - hook 返回对象要保持显式列出，便于视图入口清楚知道可用状态和方法。
+- React userscript 中，`useState` / `useEffect` 只负责同步组件展示状态和订阅外部状态；长期副作用如 MutationObserver、GM 菜单、目标站点点击流程应封装到 controller、adapter 或 store 模块，并提供启动/停止函数。
+- React 根组件可接收 `configStore`、`statusStore`、`onRunNow` 等依赖注入，方便测试组件行为并避免组件直接依赖油猴全局 API。
 
 ---
 
@@ -38,6 +40,7 @@
 - 页面信息来自浏览器 API，例如 `window.location`、`document`、`performance`。
 - 剪贴板、下载调试信息等浏览器能力封装到工具函数里，不直接散落在组件模板中。
 - 如果后续某个脚本需要远程请求，应在该脚本自己的功能 hook 或工具模块中封装，不作为仓库级默认能力。
+- React userscript 测试中通过 Vitest alias 将 `$` 指向 `src/test/userscript-api.ts`，用 localStorage 或 mock 函数模拟 GM API；不要在测试里依赖真实油猴环境。
 
 ---
 
@@ -56,5 +59,6 @@
 
 - 不要在 hook 外部重复维护同一份业务状态；能从现有状态推导的值使用 `computed()`。
 - 不要忘记清理定时器、DOM 样式节点和高亮器实例。
+- 不要把 MutationObserver 或 setTimeout 长期副作用藏在 React 展示组件里；如果必须在组件内创建，`useEffect` 必须返回清理函数。
 - 不要把长期单例随意放到组件文件里；需要单例时放到工具模块并提供初始化、读取、清理能力。
 - 不要在 hook 中吞掉错误且没有用户反馈；当前高亮与配置更新流程会用 `ElMessage` 和调试日志反馈。

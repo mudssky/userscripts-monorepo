@@ -5,8 +5,11 @@
   "description": "pnpm monorepo for userscript projects.",
   "scripts": {
     "build": "turbo run build",
+    "build:ai-assistant-enhancer": "pnpm --filter ai-assistant-enhancer run build",
     "build:highlight-keywords": "pnpm --filter highlight-keywords run build",
+    "dev:ai-assistant-enhancer": "pnpm --filter ai-assistant-enhancer run dev",
     "dev:highlight-keywords": "pnpm --filter highlight-keywords run dev",
+    "preview:ai-assistant-enhancer": "pnpm --filter ai-assistant-enhancer run preview",
     "preview:highlight-keywords": "pnpm --filter highlight-keywords run preview",
     "subtree": "tsx scripts/subtree-cli/index.ts",
     "subtree:pull": "tsx scripts/subtree-cli/index.ts pull",
