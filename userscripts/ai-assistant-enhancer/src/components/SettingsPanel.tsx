@@ -1,4 +1,4 @@
-import { Bot, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
+import { Bot, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-preact'
 import type { JSX } from 'react'
 import {
   type AppConfig,

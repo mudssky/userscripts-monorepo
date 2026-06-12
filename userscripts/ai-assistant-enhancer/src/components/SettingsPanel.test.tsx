@@ -4,7 +4,7 @@ import { DEFAULT_CONFIG } from '@/config'
 import { createDoubaoStatus } from '@/status'
 import { SettingsPanel } from './SettingsPanel'
 
-vi.mock('lucide-react', () => ({
+vi.mock('lucide-preact', () => ({
   Bot: () => 'Bot',
   ChevronLeft: () => 'ChevronLeft',
   ChevronRight: () => 'ChevronRight',

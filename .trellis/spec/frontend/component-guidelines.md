@@ -28,6 +28,7 @@
 - 复杂业务逻辑放到 `hook.ts`、`config.ts` 或 `util/` 中，组件只调用清晰的 handler。
 - React userscript 组件使用 `.tsx`，入口组件负责组合展示组件并通过 props 注入配置、状态和事件处理函数；不要在展示组件中直接读写 GM 存储或查询宿主页面 DOM。
 - React userscript 可在 `src/components/ui/` 放 shadcn 风格源码组件；业务组件放在 `src/components/`，只服务当前脚本时不要提升到共享包。
+- 使用 Preact 运行 React userscript 时，图标和 UI 依赖优先选择 Preact 原生适配包，例如 `lucide-preact`；不要直接使用导出 React `forwardRef` 对象的组件包，否则入口真实渲染时可能把对象当作 DOM 标签名并抛出 `InvalidCharacterError`。
 
 示例：
 
@@ -92,6 +93,7 @@ function onToggleDarkMode() {
 
 - 不要在子组件里直接读写 GM 存储、DOM 高亮器或全局配置；这些属于 hook 或工具函数职责。
 - 不要让 React 展示组件直接操作目标网站 DOM；站点 DOM 选择、点击、弹窗处理应放到 adapter/controller 模块。
+- 不要只在组件测试里 mock 图标或 UI 依赖后就认为入口可运行；Preact 入口还需要覆盖真实依赖挂载的 smoke test，确保 Shadow DOM 面板能实际渲染。
 - 不要让组件直接 import 另一个 userscript 的 `src/` 文件。
 - 不要把 Element Plus 弹窗默认 teleport 到宿主页；在 Shadow DOM 场景下容易造成样式错位。
 - 不要把大量业务状态散落到多个组件里；优先收拢到功能 hook，再由视图入口分发给子组件。
