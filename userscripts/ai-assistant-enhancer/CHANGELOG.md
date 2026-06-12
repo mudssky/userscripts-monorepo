@@ -1,5 +1,12 @@
 # ai-assistant-enhancer
 
+## 0.1.3
+
+### Patch Changes
+
+- 修复 Preact 入口加载 React 图标组件导致配置面板挂载失败的问题。
+- 新增「开始检查延迟」配置，刷新页面或点击「新对话」后等待页面稳定再检查，减少过早回退到「思考」的情况。
+
 ## 0.1.2
 
 ### Patch Changes
