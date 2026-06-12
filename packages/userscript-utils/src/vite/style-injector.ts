@@ -38,7 +38,9 @@ export function styleInjector(options: StyleInjectorOptions = {}): Plugin {
         if (fileName.endsWith('.css') && chunk.type === 'asset') {
           cssContent = chunk.source as string
           cssAssetKey = fileName
-          logger.info(`${logPrefix}Found CSS: ${fileName} (${cssContent.length} chars)`)
+          logger.info(
+            `${logPrefix}Found CSS: ${fileName} (${cssContent.length} chars)`,
+          )
           break
         }
       }
@@ -56,7 +58,10 @@ export function styleInjector(options: StyleInjectorOptions = {}): Plugin {
       for (const [fileName, chunk] of Object.entries(bundle)) {
         if (chunk.type === 'chunk' && fileName.endsWith('.js')) {
           if (chunk.code.includes(placeholder)) {
-            chunk.code = chunk.code.replace(new RegExp(placeholder, 'g'), cssContent)
+            chunk.code = chunk.code.replace(
+              new RegExp(placeholder, 'g'),
+              cssContent,
+            )
             logger.info(`${logPrefix}Replaced placeholder in ${fileName}`)
           }
         }

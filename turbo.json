@@ -4,6 +4,20 @@
     "typecheck": {
       "dependsOn": ["^typecheck"]
     },
+    "lint": {
+      "dependsOn": ["^lint"],
+      "cache": false
+    },
+    "format": {
+      "dependsOn": ["^format"],
+      "cache": false
+    },
+    "biome:check": {
+      "dependsOn": ["^biome:check"]
+    },
+    "qa": {
+      "dependsOn": ["^qa"]
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]

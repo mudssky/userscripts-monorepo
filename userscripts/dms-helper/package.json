@@ -11,15 +11,17 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "lint": "biome lint --write .",
+    "format": "biome format --write .",
+    "biome:check": "biome check .",
+    "qa": "pnpm typecheck && pnpm biome:check && pnpm test"
   },
   "dependencies": {
     "@mudssky/userscript-utils": "workspace:*"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.16",
-    "typescript": "^6.0.3",
-    "vite": "^8.0.16",
     "vite-plugin-monkey": "^8.0.6"
   }
 }

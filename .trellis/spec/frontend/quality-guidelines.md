@@ -17,6 +17,89 @@
 
 ---
 
+## Scenario: Workspace Quality Scripts
+
+### 1. Scope / Trigger
+
+- Trigger: 新增或维护 workspace 包级质量命令，根目录需要通过 Turborepo 批量调用。
+- Scope: 根 `package.json`、`turbo.json`、`packages/*/package.json`、`userscripts/*/package.json`。
+
+### 2. Signatures
+
+- 根目录脚本必须暴露：
+  - `pnpm typecheck` -> `turbo run typecheck`
+  - `pnpm test` -> `turbo run test`
+  - `pnpm lint` -> `turbo run lint`
+  - `pnpm format` -> `turbo run format`
+  - `pnpm biome:check` -> `turbo run biome:check`
+  - `pnpm qa` -> `turbo run qa`
+- 每个 workspace 包必须暴露：
+  - `pnpm typecheck`
+  - `pnpm test`
+  - `pnpm lint`
+  - `pnpm format`
+  - `pnpm biome:check`
+  - `pnpm qa`
+
+### 3. Contracts
+
+- `typecheck` 只做 TypeScript 类型检查，不产生构建产物。
+- `test` 必须是一次性测试命令，不能进入 watch 模式；当前推荐 `vitest run --passWithNoTests`。
+- `lint` 是修复型 lint 命令，当前推荐 `biome lint --write .`。
+- `format` 是修复型格式化命令，当前推荐 `biome format --write .`。
+- `biome:check` 是只检查不写文件的质量门，当前推荐 `biome check .`。
+- `qa` 必须串行执行 `pnpm typecheck && pnpm biome:check && pnpm test`，保证先类型、再 Biome、最后测试。
+- 根级 `turbo.json` 必须声明同名任务；写文件任务 `lint`、`format` 应设置 `"cache": false`，`qa` 只调度包级 `qa`，不要再依赖同包 `typecheck`、`biome:check`、`test` 造成重复执行。
+- `@biomejs/biome`、`typescript`、`vite`、`vitest` 属于 workspace 统一工具，只在根 `package.json` 安装；子包不要重复声明这些 devDependency。
+
+### 4. Validation & Error Matrix
+
+- 包缺少任一标准脚本 -> 根级 `turbo run <task>` 无法覆盖该包，补齐脚本后再合入。
+- `test` 使用 `vitest` 而不是 `vitest run` -> Turbo 批量调用可能卡在 watch，改成一次性命令。
+- `biome:check` 使用 `--write` -> 质量门会悄悄改文件，改为只读检查。
+- 包内没有测试文件 -> `test` 应使用 `--passWithNoTests`，避免空测试集阻断统一 QA。
+- 写文件任务开启缓存 -> 修复命令可能被 Turbo 跳过，应关闭缓存。
+- Biome 2 忽略生成目录应使用 `!!dist`，不要使用旧版 `files.ignore` 或 `!!dist/**`。
+
+### 5. Good/Base/Bad Cases
+
+- Good: 新增 userscript 包时同步添加 6 个标准脚本，并能被根 `pnpm qa` 调用。
+- Base: 仅修改某个包业务代码时，至少运行该包 `pnpm qa`；跨包或根工具变更运行根 `pnpm qa`。
+- Bad: 只在某个包里保留自定义 `check` 命令，导致根级 Turbo 无法统一调度。
+
+### 6. Tests Required
+
+- 修改脚本契约后，运行 `pnpm turbo run typecheck test biome:check --filter <package>` 验证目标包脚本可被 Turbo 调用。
+- 修改根 `turbo.json` 或根脚本后，运行根级 `pnpm typecheck`、`pnpm test` 或 `pnpm qa` 中至少一个代表性命令。
+- 修改 Biome 版本或配置后，运行对应包的 `pnpm biome:check`，确认不会写入文件。
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "biome:check": "biome check --write ."
+  }
+}
+```
+
+#### Correct
+
+```json
+{
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "biome:check": "biome check .",
+    "qa": "pnpm typecheck && pnpm biome:check && pnpm test"
+  }
+}
+```
+
+---
+
 ## Forbidden Patterns
 
 - 不要新增显式 `any`。

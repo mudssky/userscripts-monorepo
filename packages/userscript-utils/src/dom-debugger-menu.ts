@@ -1,5 +1,10 @@
-import { debugSelectors, diagnoseSelectors, dumpDomOutline, formatDiagnostics } from './debugger'
 import type { SelectorMap } from './debugger'
+import {
+  debugSelectors,
+  diagnoseSelectors,
+  dumpDomOutline,
+  formatDiagnostics,
+} from './debugger'
 
 /**
  * DOM Debugger 菜单配置
@@ -39,10 +44,17 @@ function copyText(text: string): void {
  * @param options - 配置项
  */
 export function registerDomDebuggerMenu(options: DomDebuggerMenuOptions): void {
-  const { scriptName, selectors, autoDiagnose = false, domDumpDepth = 5 } = options
+  const {
+    scriptName,
+    selectors,
+    autoDiagnose = false,
+    domDumpDepth = 5,
+  } = options
 
   if (typeof GM_registerMenuCommand === 'undefined') {
-    console.warn(`[${scriptName}] GM_registerMenuCommand 不可用，跳过 DOM Debugger 菜单注册`)
+    console.warn(
+      `[${scriptName}] GM_registerMenuCommand 不可用，跳过 DOM Debugger 菜单注册`,
+    )
     return
   }
 
@@ -63,7 +75,9 @@ export function registerDomDebuggerMenu(options: DomDebuggerMenuOptions): void {
   register(`✅ 快速检测 (${scriptName})`, () => {
     const results = debugSelectors(selectors)
     const lines = results.map((r) => {
-      const status = r.matched ? `✅ 匹配 (${r.count}个)` : `❌ 未匹配 (${r.reason ?? 'unknown'})`
+      const status = r.matched
+        ? `✅ 匹配 (${r.count}个)`
+        : `❌ 未匹配 (${r.reason ?? 'unknown'})`
       return `  ${r.name}: ${status}`
     })
     return `快速检测:\n${lines.join('\n')}`

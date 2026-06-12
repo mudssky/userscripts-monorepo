@@ -17,6 +17,7 @@ export default defineConfig({
       'react-dom': 'preact/compat',
       'react/jsx-runtime': 'preact/jsx-runtime',
       '@': resolve(__dirname, './src'),
+      $: resolve(__dirname, './src/test/userscript-api.ts'),
     },
   },
 })

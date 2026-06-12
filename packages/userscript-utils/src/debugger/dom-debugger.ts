@@ -53,36 +53,61 @@ export class DomDebugger {
     const startTime = Date.now()
 
     if (!value) {
-      return Promise.resolve({ name, matched: false, element: null, elapsed: 0 })
+      return Promise.resolve({
+        name,
+        matched: false,
+        element: null,
+        elapsed: 0,
+      })
     }
 
     return new Promise<WaitForResult>((resolve) => {
       const tryMatch = (): Element | null => {
         if (typeof value === 'function') {
-          try { return value(root) } catch { return null }
+          try {
+            return value(root)
+          } catch {
+            return null
+          }
         }
         return root.querySelector(value)
       }
 
       const initial = tryMatch()
       if (initial) {
-        resolve({ name, matched: true, element: initial, elapsed: Date.now() - startTime })
+        resolve({
+          name,
+          matched: true,
+          element: initial,
+          elapsed: Date.now() - startTime,
+        })
         return
       }
 
       const timer = setTimeout(() => {
         observer.disconnect()
-        resolve({ name, matched: false, element: null, elapsed: Date.now() - startTime })
+        resolve({
+          name,
+          matched: false,
+          element: null,
+          elapsed: Date.now() - startTime,
+        })
       }, timeout)
 
-      const observerTarget = root instanceof Document ? root.documentElement : root
+      const observerTarget =
+        root instanceof Document ? root.documentElement : root
       const observer = new MutationObserver(() => {
         const el = tryMatch()
         if (el) {
           clearTimeout(timer)
           clearInterval(pollTimer)
           observer.disconnect()
-          resolve({ name, matched: true, element: el, elapsed: Date.now() - startTime })
+          resolve({
+            name,
+            matched: true,
+            element: el,
+            elapsed: Date.now() - startTime,
+          })
         }
       })
 
@@ -94,11 +119,18 @@ export class DomDebugger {
           clearTimeout(timer)
           clearInterval(pollTimer)
           observer.disconnect()
-          resolve({ name, matched: true, element: el, elapsed: Date.now() - startTime })
+          resolve({
+            name,
+            matched: true,
+            element: el,
+            elapsed: Date.now() - startTime,
+          })
         }
       }, interval)
 
-      setTimeout(() => { clearInterval(pollTimer) }, timeout)
+      setTimeout(() => {
+        clearInterval(pollTimer)
+      }, timeout)
     })
   }
 
@@ -110,7 +142,13 @@ export class DomDebugger {
     for (const name of names) delete this.selectors[name]
   }
 
-  getLastResults(): SelectorResult[] { return this.lastResults }
-  getLastDiagnostics(): SelectorDiagnostic[] { return this.lastDiagnostics }
-  getSelectorNames(): string[] { return Object.keys(this.selectors) }
+  getLastResults(): SelectorResult[] {
+    return this.lastResults
+  }
+  getLastDiagnostics(): SelectorDiagnostic[] {
+    return this.lastDiagnostics
+  }
+  getSelectorNames(): string[] {
+    return Object.keys(this.selectors)
+  }
 }

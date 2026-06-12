@@ -1,5 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { debugSelectors, diagnoseSelectors, formatDiagnostics, isValidSelector } from './core'
+import { beforeEach, describe, expect, it } from 'vitest'
+import {
+  debugSelectors,
+  diagnoseSelectors,
+  formatDiagnostics,
+  isValidSelector,
+} from './core'
 import type { SelectorMap } from './type'
 
 describe('isValidSelector', () => {

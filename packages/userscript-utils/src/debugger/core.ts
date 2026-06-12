@@ -66,7 +66,14 @@ function resolveSelector(
   const matched = elements.length > 0
   const reason = matched ? undefined : SelectorFailReason.NOT_FOUND
 
-  return { name, selector: value, matched, count: elements.length, elements, reason }
+  return {
+    name,
+    selector: value,
+    matched,
+    count: elements.length,
+    elements,
+    reason,
+  }
 }
 
 /**
@@ -104,7 +111,10 @@ function collectContext(
   const siblings: Array<{ tag: string; classes: string[] }> = []
   if (nearestElement?.parentElement) {
     const parent = nearestElement.parentElement
-    for (const child of Array.from(parent.children).slice(0, SIBLINGS_MAX_COUNT)) {
+    for (const child of Array.from(parent.children).slice(
+      0,
+      SIBLINGS_MAX_COUNT,
+    )) {
       siblings.push({
         tag: child.tagName.toLowerCase(),
         classes: Array.from(child.classList),
@@ -114,7 +124,10 @@ function collectContext(
 
   const parent = nearestElement?.parentElement
   const nearbyHtmlSnippet = nearestElement?.parentElement
-    ? truncateHtml(nearestElement.parentElement.outerHTML, HTML_SNIPPET_MAX_LENGTH)
+    ? truncateHtml(
+        nearestElement.parentElement.outerHTML,
+        HTML_SNIPPET_MAX_LENGTH,
+      )
     : null
 
   return {
@@ -262,7 +275,9 @@ export function dumpDomOutline(
       }
     }
     if (el.children.length > MAX_CHILDREN) {
-      lines.push(`${childPrefix}└── ... (${el.children.length - MAX_CHILDREN} more)`)
+      lines.push(
+        `${childPrefix}└── ... (${el.children.length - MAX_CHILDREN} more)`,
+      )
     }
   }
 

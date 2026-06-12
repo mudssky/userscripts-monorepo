@@ -7,9 +7,7 @@
     }
   },
   "files": {
-    "ignore": [
-      "./dist/*"
-    ]
+    "includes": ["**", "!!dist"]
   },
   "formatter": {
     "enabled": true,
@@ -29,9 +27,6 @@
       "a11y": {
         "useKeyWithClickEvents": "off"
       }
-    },
-    "ignore": [
-      "dist/*.js"
-    ]
+    }
   }
 }

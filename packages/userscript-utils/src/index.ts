@@ -1,13 +1,5 @@
 /// <reference path="./greasemonkey.d.ts" />
 
-// Shadow DOM 容器工具
-export {
-  createShadowContainer,
-  type ShadowContainerOptions,
-  type ShadowContainerResult,
-  type StyleSource,
-} from './shadow-container'
-
 // Debug 日志器
 export {
   DebugLogger,
@@ -15,28 +7,33 @@ export {
   type LogEntry,
   type LogLevel,
 } from './debug-logger'
-
 // DOM Debugger
 export {
+  type DebugOptions,
   DomDebugger,
   debugSelectors,
   diagnoseSelectors,
+  FailReason,
   formatDiagnostics,
   isValidSelector,
-  SelectorFailReason,
-  FailReason,
-  type DebugOptions,
   type SelectorDiagnostic,
   type SelectorDiagnosticContext,
+  SelectorFailReason,
   type SelectorMap,
   type SelectorResult,
   type SelectorValue,
   type WaitForOptions,
   type WaitForResult,
 } from './debugger'
-
 // DOM Debugger 菜单接入
 export {
-  registerDomDebuggerMenu,
   type DomDebuggerMenuOptions,
+  registerDomDebuggerMenu,
 } from './dom-debugger-menu'
+// Shadow DOM 容器工具
+export {
+  createShadowContainer,
+  type ShadowContainerOptions,
+  type ShadowContainerResult,
+  type StyleSource,
+} from './shadow-container'

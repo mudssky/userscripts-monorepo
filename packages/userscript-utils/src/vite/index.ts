@@ -1,1 +1,1 @@
-export { styleInjector, type StyleInjectorOptions } from './style-injector'
+export { type StyleInjectorOptions, styleInjector } from './style-injector'
