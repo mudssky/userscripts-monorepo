@@ -90,6 +90,33 @@ describe('SettingsPanel', () => {
     })
   })
 
+  it('updates auto check delay', () => {
+    const onConfigChange = vi.fn()
+    render(
+      <SettingsPanel
+        config={{ ...DEFAULT_CONFIG, panelCollapsed: false }}
+        status={createDoubaoStatus('idle', '等待页面加载')}
+        onConfigChange={onConfigChange}
+        onRunNow={vi.fn()}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText(/开始检查延迟/), {
+      target: { value: '3600' },
+    })
+
+    expect(onConfigChange).toHaveBeenCalledWith({
+      ...DEFAULT_CONFIG,
+      panelCollapsed: false,
+      assistants: {
+        doubao: {
+          ...DEFAULT_CONFIG.assistants.doubao,
+          autoCheckDelayMs: 3600,
+        },
+      },
+    })
+  })
+
   it('updates mode switch confirm delay', () => {
     const onConfigChange = vi.fn()
     render(
@@ -101,7 +128,7 @@ describe('SettingsPanel', () => {
       />,
     )
 
-    fireEvent.change(screen.getByLabelText(/切换确认延迟/), {
+    fireEvent.change(screen.getByLabelText(/专家确认延迟/), {
       target: { value: '2600' },
     })
 

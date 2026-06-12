@@ -2,8 +2,11 @@ import { Bot, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-preact'
 import type { JSX } from 'react'
 import {
   type AppConfig,
+  MAX_AUTO_CHECK_DELAY_MS,
   MAX_MODE_SWITCH_CONFIRM_MS,
+  MIN_AUTO_CHECK_DELAY_MS,
   MIN_MODE_SWITCH_CONFIRM_MS,
+  normalizeAutoCheckDelayMs,
   normalizeModeSwitchConfirmMs,
 } from '@/config'
 import { cn } from '@/lib/utils'
@@ -147,6 +150,26 @@ export function SettingsPanel({
   }
 
   /**
+   * 更新自动检查开始延迟。
+   *
+   * @param value - 输入框字符串值
+   * @returns 无返回值
+   */
+  function updateAutoCheckDelayMs(value: string): void {
+    const autoCheckDelayMs = normalizeAutoCheckDelayMs(Number(value))
+    onConfigChange({
+      ...config,
+      assistants: {
+        ...config.assistants,
+        doubao: {
+          ...config.assistants.doubao,
+          autoCheckDelayMs,
+        },
+      },
+    })
+  }
+
+  /**
    * 更新模式切换确认时长。
    *
    * @param value - 输入框字符串值
@@ -221,7 +244,33 @@ export function SettingsPanel({
 
             <label className="flex flex-col gap-2 rounded-md border bg-background p-3">
               <span className="flex items-center justify-between gap-3">
-                <span className="text-sm font-medium">切换确认延迟</span>
+                <span className="text-sm font-medium">开始检查延迟</span>
+                <span className="text-xs text-muted-foreground">毫秒</span>
+              </span>
+              <input
+                type="number"
+                min={MIN_AUTO_CHECK_DELAY_MS}
+                max={MAX_AUTO_CHECK_DELAY_MS}
+                step={100}
+                value={config.assistants.doubao.autoCheckDelayMs}
+                disabled={!config.enabled || !config.assistants.doubao.enabled}
+                className={cn(
+                  'h-8 rounded-md border bg-background px-2 text-sm outline-none transition-colors',
+                  'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                  'disabled:cursor-not-allowed disabled:opacity-50',
+                )}
+                onChange={(event) =>
+                  updateAutoCheckDelayMs(event.currentTarget.value)
+                }
+              />
+              <span className="text-xs leading-5 text-muted-foreground">
+                刷新或新对话后等待页面稳定再检查；过早可能误回退思考
+              </span>
+            </label>
+
+            <label className="flex flex-col gap-2 rounded-md border bg-background p-3">
+              <span className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium">专家确认延迟</span>
                 <span className="text-xs text-muted-foreground">毫秒</span>
               </span>
               <input

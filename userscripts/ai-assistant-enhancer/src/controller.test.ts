@@ -138,4 +138,36 @@ describe('createEnhancerController', () => {
     expect(adapter.switchToBestMode).toHaveBeenCalledTimes(3)
     expect(statusStore.getStatus().message).toBe('已切换到专家')
   })
+
+  it('uses configured auto check delay before automatic switching', async () => {
+    const statusStore = createStatusStore(createDoubaoStatus('idle', '等待'))
+    const adapter = createAdapter({
+      mode: 'expert',
+      changed: true,
+      reason: '已切换到专家',
+    })
+    const controller = createEnhancerController({
+      adapter,
+      getConfig: () => ({
+        ...DEFAULT_CONFIG,
+        assistants: {
+          doubao: {
+            ...DEFAULT_CONFIG.assistants.doubao,
+            autoCheckDelayMs: 2500,
+          },
+        },
+      }),
+      statusStore,
+    })
+
+    controller.start()
+    await vi.advanceTimersByTimeAsync(2499)
+    expect(adapter.switchToBestMode).not.toHaveBeenCalled()
+
+    await vi.advanceTimersByTimeAsync(1)
+    expect(adapter.switchToBestMode).toHaveBeenCalledTimes(1)
+
+    await vi.advanceTimersByTimeAsync(1500)
+    expect(adapter.switchToBestMode).toHaveBeenCalledTimes(2)
+  })
 })

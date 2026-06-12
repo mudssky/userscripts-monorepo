@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_CONFIG,
   isDoubaoEnabled,
+  normalizeAutoCheckDelayMs,
   normalizeConfig,
   normalizeModeSwitchConfirmMs,
 } from './config'
@@ -28,11 +29,24 @@ describe('normalizeConfig', () => {
         doubao: {
           enabled: false,
           preferredModeStrategy: 'expert-first',
+          autoCheckDelayMs: DEFAULT_CONFIG.assistants.doubao.autoCheckDelayMs,
           modeSwitchConfirmMs:
             DEFAULT_CONFIG.assistants.doubao.modeSwitchConfirmMs,
         },
       },
     })
+  })
+
+  it('normalizes auto check delay', () => {
+    expect(
+      normalizeConfig({
+        assistants: {
+          doubao: {
+            autoCheckDelayMs: 3600,
+          },
+        },
+      }).assistants.doubao.autoCheckDelayMs,
+    ).toBe(3600)
   })
 
   it('normalizes mode switch confirm delay', () => {
@@ -45,6 +59,16 @@ describe('normalizeConfig', () => {
         },
       }).assistants.doubao.modeSwitchConfirmMs,
     ).toBe(2200)
+  })
+})
+
+describe('normalizeAutoCheckDelayMs', () => {
+  it('clamps invalid and out-of-range values', () => {
+    expect(normalizeAutoCheckDelayMs('soon')).toBe(
+      DEFAULT_CONFIG.assistants.doubao.autoCheckDelayMs,
+    )
+    expect(normalizeAutoCheckDelayMs(-100)).toBe(0)
+    expect(normalizeAutoCheckDelayMs(12000)).toBe(10000)
   })
 })
 

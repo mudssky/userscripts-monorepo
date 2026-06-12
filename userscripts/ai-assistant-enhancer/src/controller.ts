@@ -12,7 +12,7 @@ export interface EnhancerControllerOptions {
   autoRetryDelaysMs?: readonly number[]
 }
 
-const DEFAULT_AUTO_RETRY_DELAYS_MS = [300, 1500, 3000] as const
+const AUTO_RECHECK_INTERVAL_MS = 1500
 
 /**
  * 创建自动切换控制器。
@@ -26,7 +26,7 @@ export function createEnhancerController(options: EnhancerControllerOptions) {
     getConfig,
     statusStore,
     debounceMs = 300,
-    autoRetryDelaysMs = DEFAULT_AUTO_RETRY_DELAYS_MS,
+    autoRetryDelaysMs,
   } = options
   let cleanupWatcher: (() => void) | undefined
   let timer: ReturnType<typeof window.setTimeout> | undefined
@@ -150,13 +150,27 @@ export function createEnhancerController(options: EnhancerControllerOptions) {
   }
 
   /**
-   * 调度一组自动复查，覆盖豆包新对话后延迟重置默认模型的时序。
+   * 获取当前配置下的自动检查延迟序列。
+   *
+   * @returns 自动检查延迟序列
+   */
+  function getAutoRunDelays(): readonly number[] {
+    if (autoRetryDelaysMs) {
+      return autoRetryDelaysMs
+    }
+
+    const { autoCheckDelayMs } = getConfig().assistants.doubao
+    return [autoCheckDelayMs, autoCheckDelayMs + AUTO_RECHECK_INTERVAL_MS]
+  }
+
+  /**
+   * 调度一组自动复查，覆盖页面刷新和新对话后延迟重置默认模型的时序。
    *
    * @returns 无返回值
    */
   function scheduleAutoRun(): void {
     clearPendingRun()
-    for (const delayMs of autoRetryDelaysMs) {
+    for (const delayMs of getAutoRunDelays()) {
       const autoTimer = window.setTimeout(() => {
         autoTimers.delete(autoTimer)
         runScheduledOnce()
