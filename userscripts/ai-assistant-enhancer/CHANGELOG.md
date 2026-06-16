@@ -1,5 +1,11 @@
 # ai-assistant-enhancer
 
+## 0.1.4
+
+### Patch Changes
+
+- 支持豆包「快速 / 专家 / 办公任务」模式顺序设置，默认按「专家 / 办公任务 / 快速」尝试可用模式。
+
 ## 0.1.3
 
 ### Patch Changes
