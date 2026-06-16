@@ -5,6 +5,8 @@ export type SwitchStatusKind =
   | 'disabled'
   | 'waiting'
   | 'expert'
+  | 'office'
+  | 'fast'
   | 'fallback-thinking'
   | 'failed'
 

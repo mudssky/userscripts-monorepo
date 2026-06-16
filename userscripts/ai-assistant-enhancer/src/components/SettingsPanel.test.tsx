@@ -5,6 +5,8 @@ import { createDoubaoStatus } from '@/status'
 import { SettingsPanel } from './SettingsPanel'
 
 vi.mock('lucide-preact', () => ({
+  ArrowDown: () => 'ArrowDown',
+  ArrowUp: () => 'ArrowUp',
   Bot: () => 'Bot',
   ChevronLeft: () => 'ChevronLeft',
   ChevronRight: () => 'ChevronRight',
@@ -33,14 +35,15 @@ describe('SettingsPanel', () => {
     render(
       <SettingsPanel
         config={{ ...DEFAULT_CONFIG, panelCollapsed: false }}
-        status={createDoubaoStatus('fallback-thinking', '已回退到思考')}
+        status={createDoubaoStatus('office', '已切换到办公任务')}
         onConfigChange={vi.fn()}
         onRunNow={vi.fn()}
       />,
     )
 
     expect(screen.getByText('AI 助手增强器')).toBeInTheDocument()
-    expect(screen.getByText('已回退到思考')).toBeInTheDocument()
+    expect(screen.getByText('已切换到办公任务')).toBeInTheDocument()
+    expect(screen.getByText('模式优先级')).toBeInTheDocument()
     expect(screen.getAllByRole('switch')).toHaveLength(2)
     expect(screen.getAllByText('已开启')).toHaveLength(2)
   })
@@ -117,6 +120,31 @@ describe('SettingsPanel', () => {
     })
   })
 
+  it('updates preferred mode order', () => {
+    const onConfigChange = vi.fn()
+    render(
+      <SettingsPanel
+        config={{ ...DEFAULT_CONFIG, panelCollapsed: false }}
+        status={createDoubaoStatus('idle', '等待页面加载')}
+        onConfigChange={onConfigChange}
+        onRunNow={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByTitle('上移办公任务'))
+
+    expect(onConfigChange).toHaveBeenCalledWith({
+      ...DEFAULT_CONFIG,
+      panelCollapsed: false,
+      assistants: {
+        doubao: {
+          ...DEFAULT_CONFIG.assistants.doubao,
+          preferredModeOrder: ['office', 'expert', 'fast'],
+        },
+      },
+    })
+  })
+
   it('updates mode switch confirm delay', () => {
     const onConfigChange = vi.fn()
     render(
@@ -128,7 +156,7 @@ describe('SettingsPanel', () => {
       />,
     )
 
-    fireEvent.change(screen.getByLabelText(/专家确认延迟/), {
+    fireEvent.change(screen.getByLabelText(/模式确认延迟/), {
       target: { value: '2600' },
     })
 

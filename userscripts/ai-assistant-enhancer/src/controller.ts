@@ -1,7 +1,7 @@
 import type { AssistantAdapter } from './adapters/types'
 import type { AppConfig } from './config'
 import { isDoubaoEnabled } from './config'
-import type { createStatusStore } from './status'
+import type { createStatusStore, SwitchStatusKind } from './status'
 import { createDoubaoStatus } from './status'
 
 export interface EnhancerControllerOptions {
@@ -13,6 +13,21 @@ export interface EnhancerControllerOptions {
 }
 
 const AUTO_RECHECK_INTERVAL_MS = 1500
+
+/**
+ * 将模式切换结果映射为面板状态。
+ *
+ * @param mode - 当前模式
+ * @returns 面板状态类型
+ */
+function getStatusKindByMode(
+  mode: Awaited<ReturnType<AssistantAdapter['switchToBestMode']>>['mode'],
+): SwitchStatusKind {
+  if (mode === 'expert') return 'expert'
+  if (mode === 'office') return 'office'
+  if (mode === 'fast') return 'fast'
+  return 'failed'
+}
 
 /**
  * 创建自动切换控制器。
@@ -95,19 +110,11 @@ export function createEnhancerController(options: EnhancerControllerOptions) {
     try {
       const result = await adapter.switchToBestMode({
         modeSwitchConfirmMs: config.assistants.doubao.modeSwitchConfirmMs,
+        preferredModeOrder: config.assistants.doubao.preferredModeOrder,
       })
-      if (result.mode === 'expert') {
-        statusStore.setStatus(createDoubaoStatus('expert', result.reason))
-      } else if (result.mode === 'thinking') {
-        statusStore.setStatus(
-          createDoubaoStatus(
-            result.changed ? 'fallback-thinking' : 'idle',
-            result.reason,
-          ),
-        )
-      } else {
-        statusStore.setStatus(createDoubaoStatus('failed', result.reason))
-      }
+      statusStore.setStatus(
+        createDoubaoStatus(getStatusKindByMode(result.mode), result.reason),
+      )
     } catch (error) {
       const message = error instanceof Error ? error.message : '未知错误'
       statusStore.setStatus(

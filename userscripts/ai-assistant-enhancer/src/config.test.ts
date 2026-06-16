@@ -5,6 +5,7 @@ import {
   normalizeAutoCheckDelayMs,
   normalizeConfig,
   normalizeModeSwitchConfirmMs,
+  normalizePreferredModeOrder,
 } from './config'
 
 describe('normalizeConfig', () => {
@@ -29,6 +30,7 @@ describe('normalizeConfig', () => {
         doubao: {
           enabled: false,
           preferredModeStrategy: 'expert-first',
+          preferredModeOrder: ['expert', 'office', 'fast'],
           autoCheckDelayMs: DEFAULT_CONFIG.assistants.doubao.autoCheckDelayMs,
           modeSwitchConfirmMs:
             DEFAULT_CONFIG.assistants.doubao.modeSwitchConfirmMs,
@@ -60,6 +62,18 @@ describe('normalizeConfig', () => {
       }).assistants.doubao.modeSwitchConfirmMs,
     ).toBe(2200)
   })
+
+  it('normalizes preferred mode order from old or partial config', () => {
+    expect(
+      normalizeConfig({
+        assistants: {
+          doubao: {
+            preferredModeOrder: ['fast', 'expert', 'fast', 'unknown'],
+          },
+        },
+      }).assistants.doubao.preferredModeOrder,
+    ).toEqual(['fast', 'expert', 'office'])
+  })
 })
 
 describe('normalizeAutoCheckDelayMs', () => {
@@ -79,6 +93,21 @@ describe('normalizeModeSwitchConfirmMs', () => {
     )
     expect(normalizeModeSwitchConfirmMs(100)).toBe(500)
     expect(normalizeModeSwitchConfirmMs(8000)).toBe(5000)
+  })
+})
+
+describe('normalizePreferredModeOrder', () => {
+  it('drops invalid values, deduplicates modes and fills missing defaults', () => {
+    expect(normalizePreferredModeOrder(['office', 'fast', 'office'])).toEqual([
+      'office',
+      'fast',
+      'expert',
+    ])
+    expect(normalizePreferredModeOrder('expert')).toEqual([
+      'expert',
+      'office',
+      'fast',
+    ])
   })
 })
 

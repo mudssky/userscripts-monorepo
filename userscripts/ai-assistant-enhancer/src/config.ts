@@ -1,9 +1,12 @@
+import type { SelectableAssistantMode } from './adapters/types'
+
 export type AssistantId = 'doubao'
 export type PreferredModeStrategy = 'expert-first'
 
 export interface AssistantConfig {
   enabled: boolean
   preferredModeStrategy: PreferredModeStrategy
+  preferredModeOrder: SelectableAssistantMode[]
   autoCheckDelayMs: number
   modeSwitchConfirmMs: number
 }
@@ -19,6 +22,16 @@ export const MIN_MODE_SWITCH_CONFIRM_MS = 500
 export const MAX_MODE_SWITCH_CONFIRM_MS = 5000
 export const MIN_AUTO_CHECK_DELAY_MS = 0
 export const MAX_AUTO_CHECK_DELAY_MS = 10000
+export const DEFAULT_DOUBAO_MODE_ORDER: readonly SelectableAssistantMode[] = [
+  'expert',
+  'office',
+  'fast',
+]
+export const DOUBAO_MODE_LABELS: Record<SelectableAssistantMode, string> = {
+  fast: '快速',
+  expert: '专家',
+  office: '办公任务',
+}
 
 export const DEFAULT_CONFIG: AppConfig = {
   enabled: true,
@@ -27,6 +40,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     doubao: {
       enabled: true,
       preferredModeStrategy: 'expert-first',
+      preferredModeOrder: [...DEFAULT_DOUBAO_MODE_ORDER],
       autoCheckDelayMs: 2500,
       modeSwitchConfirmMs: 1600,
     },
@@ -41,6 +55,45 @@ export const DEFAULT_CONFIG: AppConfig = {
  */
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/**
+ * 判断输入是否为可选豆包模式。
+ *
+ * @param value - 待判断输入
+ * @returns 输入是否为可排序模式
+ */
+function isSelectableAssistantMode(
+  value: unknown,
+): value is SelectableAssistantMode {
+  return value === 'fast' || value === 'expert' || value === 'office'
+}
+
+/**
+ * 归一化豆包模式顺序。
+ *
+ * @param value - 未知来源的模式顺序
+ * @returns 去重并补齐后的模式顺序
+ */
+export function normalizePreferredModeOrder(
+  value: unknown,
+): SelectableAssistantMode[] {
+  const order: SelectableAssistantMode[] = []
+  if (Array.isArray(value)) {
+    for (const mode of value) {
+      if (isSelectableAssistantMode(mode) && !order.includes(mode)) {
+        order.push(mode)
+      }
+    }
+  }
+
+  for (const mode of DEFAULT_DOUBAO_MODE_ORDER) {
+    if (!order.includes(mode)) {
+      order.push(mode)
+    }
+  }
+
+  return order
 }
 
 /**
@@ -111,6 +164,9 @@ export function normalizeConfig(value: unknown): AppConfig {
             ? doubao.enabled
             : DEFAULT_CONFIG.assistants.doubao.enabled,
         preferredModeStrategy,
+        preferredModeOrder: normalizePreferredModeOrder(
+          doubao.preferredModeOrder,
+        ),
         autoCheckDelayMs: normalizeAutoCheckDelayMs(doubao.autoCheckDelayMs),
         modeSwitchConfirmMs: normalizeModeSwitchConfirmMs(
           doubao.modeSwitchConfirmMs,

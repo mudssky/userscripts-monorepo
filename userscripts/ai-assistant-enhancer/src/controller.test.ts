@@ -30,12 +30,12 @@ describe('createEnhancerController', () => {
     vi.useFakeTimers()
   })
 
-  it('sets fallback status when expert falls back to thinking', async () => {
+  it('sets mode status and passes preferred order to adapter', async () => {
     const statusStore = createStatusStore(createDoubaoStatus('idle', '等待'))
     const adapter = createAdapter({
-      mode: 'thinking',
+      mode: 'office',
       changed: true,
-      reason: '专家不可用，已回退到思考',
+      reason: '专家不可用，已切换到办公任务',
     })
     const controller = createEnhancerController({
       adapter,
@@ -46,19 +46,20 @@ describe('createEnhancerController', () => {
 
     await controller.runOnce()
 
-    expect(statusStore.getStatus().kind).toBe('fallback-thinking')
-    expect(statusStore.getStatus().message).toContain('回退')
+    expect(statusStore.getStatus().kind).toBe('office')
+    expect(statusStore.getStatus().message).toContain('办公任务')
     expect(adapter.switchToBestMode).toHaveBeenCalledWith({
       modeSwitchConfirmMs: DEFAULT_CONFIG.assistants.doubao.modeSwitchConfirmMs,
+      preferredModeOrder: DEFAULT_CONFIG.assistants.doubao.preferredModeOrder,
     })
   })
 
   it('does not switch when global config is disabled', async () => {
     const statusStore = createStatusStore(createDoubaoStatus('idle', '等待'))
     const adapter = createAdapter({
-      mode: 'thinking',
+      mode: 'office',
       changed: true,
-      reason: '已切换到思考',
+      reason: '已切换到办公任务',
     })
     const controller = createEnhancerController({
       adapter,

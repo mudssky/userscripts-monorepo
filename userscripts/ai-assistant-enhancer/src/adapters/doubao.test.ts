@@ -97,8 +97,8 @@ describe('doubaoAdapter', () => {
         `
           <div role="menu">
             <div role="menuitem">快速 适用于大部分情况</div>
-            <div role="menuitem">思考 擅长解决更难的问题</div>
             <div role="menuitem">专家 研究级智能模型</div>
+            <div role="menuitem">办公任务 擅长处理文档和工作任务</div>
           </div>
         `,
       )
@@ -114,7 +114,7 @@ describe('doubaoAdapter', () => {
     await expect(__doubaoTestUtils.openModeMenu()).resolves.toBe(false)
   }, 6000)
 
-  it('等待专家模式异步生效后不回退思考', async () => {
+  it('等待专家模式异步生效后不尝试后续模式', async () => {
     const trigger = mountClosedModeTrigger()
     const childButton = getModeChildButton(trigger)
     childButton.addEventListener('click', () => {
@@ -126,7 +126,6 @@ describe('doubaoAdapter', () => {
       expertItem.addEventListener('click', () => {
         window.setTimeout(() => {
           childButton.textContent = '专家'
-          menu.remove()
         }, 300)
       })
       document.body.append(menu)
@@ -135,6 +134,7 @@ describe('doubaoAdapter', () => {
     await expect(
       doubaoAdapter.switchToBestMode({
         modeSwitchConfirmMs: 1200,
+        preferredModeOrder: ['expert', 'office', 'fast'],
       }),
     ).resolves.toMatchObject({
       mode: 'expert',
@@ -142,7 +142,7 @@ describe('doubaoAdapter', () => {
     })
   })
 
-  it('确认窗口太短时会进入回退流程', async () => {
+  it('确认窗口太短时会继续尝试下一项', async () => {
     const trigger = mountClosedModeTrigger()
     const childButton = getModeChildButton(trigger)
     childButton.addEventListener('click', () => {
@@ -157,16 +157,23 @@ describe('doubaoAdapter', () => {
           menu.remove()
         }, 300)
       })
+      const officeItem = Array.from(
+        menu.querySelectorAll('[role="menuitem"]'),
+      ).find((item) => item.textContent?.includes('办公任务')) as HTMLDivElement
+      officeItem.addEventListener('click', () => {
+        childButton.textContent = '办公任务'
+      })
       document.body.append(menu)
     })
 
     await expect(
       doubaoAdapter.switchToBestMode({
         modeSwitchConfirmMs: 100,
+        preferredModeOrder: ['expert', 'office', 'fast'],
       }),
     ).resolves.toMatchObject({
-      mode: 'fast',
-      changed: false,
+      mode: 'office',
+      changed: true,
     })
   })
 
@@ -176,7 +183,7 @@ describe('doubaoAdapter', () => {
     document.body.innerHTML = `
       <div>
         <button data-slot="dropdown-menu-trigger">快速</button>
-        <div class="mode-label">思考</div>
+        <div class="mode-label">办公任务</div>
         <button class="new-chat">新对话</button>
       </div>
     `
@@ -211,8 +218,8 @@ function createModeMenu(): HTMLDivElement {
 
   for (const text of [
     '快速 适用于大部分情况',
-    '思考 擅长解决更难的问题',
     '专家 研究级智能模型',
+    '办公任务 擅长处理文档和工作任务',
   ]) {
     const item = document.createElement('div')
     item.setAttribute('role', 'menuitem')

@@ -1,7 +1,16 @@
-import { Bot, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-preact'
+import {
+  ArrowDown,
+  ArrowUp,
+  Bot,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+} from 'lucide-preact'
 import type { JSX } from 'react'
+import type { SelectableAssistantMode } from '@/adapters/types'
 import {
   type AppConfig,
+  DOUBAO_MODE_LABELS,
   MAX_AUTO_CHECK_DELAY_MS,
   MAX_MODE_SWITCH_CONFIRM_MS,
   MIN_AUTO_CHECK_DELAY_MS,
@@ -29,6 +38,12 @@ interface SettingSwitchRowProps {
   onCheckedChange: (checked: boolean) => void
 }
 
+interface ModeOrderEditorProps {
+  order: readonly SelectableAssistantMode[]
+  disabled: boolean
+  onOrderChange: (order: SelectableAssistantMode[]) => void
+}
+
 /**
  * 格式化状态更新时间。
  *
@@ -47,11 +62,105 @@ function formatStatusTime(timestamp: number): string {
  */
 function getStatusLabel(status: SwitchStatus): string {
   if (status.kind === 'expert') return '专家'
+  if (status.kind === 'office') return '办公'
+  if (status.kind === 'fast') return '快速'
   if (status.kind === 'fallback-thinking') return '思考'
   if (status.kind === 'disabled') return '关闭'
   if (status.kind === 'waiting') return '检查中'
   if (status.kind === 'failed') return '失败'
   return '待机'
+}
+
+/**
+ * 调整数组中模式的位置。
+ *
+ * @param order - 当前模式顺序
+ * @param fromIndex - 起始位置
+ * @param toIndex - 目标位置
+ * @returns 调整后的模式顺序
+ */
+function moveModeOrderItem(
+  order: readonly SelectableAssistantMode[],
+  fromIndex: number,
+  toIndex: number,
+): SelectableAssistantMode[] {
+  const nextOrder = [...order]
+  const [item] = nextOrder.splice(fromIndex, 1)
+  if (!item) {
+    return nextOrder
+  }
+  nextOrder.splice(toIndex, 0, item)
+  return nextOrder
+}
+
+/**
+ * 豆包模式顺序编辑器。
+ *
+ * @param props - 模式顺序编辑器属性
+ * @returns 模式顺序编辑器组件
+ */
+function ModeOrderEditor({
+  order,
+  disabled,
+  onOrderChange,
+}: ModeOrderEditorProps): JSX.Element {
+  return (
+    <div className="flex flex-col gap-2 rounded-md border bg-background p-3">
+      <span className="flex items-center justify-between gap-3">
+        <span className="text-sm font-medium">模式优先级</span>
+        <span className="text-xs text-muted-foreground">从上到下</span>
+      </span>
+      <div className="flex flex-col gap-2">
+        {order.map((mode, index) => (
+          <div
+            key={mode}
+            className={cn(
+              'flex h-9 items-center justify-between gap-2 rounded-md border bg-muted/30 px-2',
+              disabled && 'opacity-50',
+            )}
+          >
+            <span className="flex min-w-0 items-center gap-2 text-sm">
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-background text-xs font-medium text-muted-foreground">
+                {index + 1}
+              </span>
+              <span className="truncate">{DOUBAO_MODE_LABELS[mode]}</span>
+            </span>
+            <span className="flex shrink-0 items-center gap-1">
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="size-7"
+                title={`上移${DOUBAO_MODE_LABELS[mode]}`}
+                disabled={disabled || index === 0}
+                onClick={() =>
+                  onOrderChange(moveModeOrderItem(order, index, index - 1))
+                }
+              >
+                <ArrowUp data-icon="inline-start" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="size-7"
+                title={`下移${DOUBAO_MODE_LABELS[mode]}`}
+                disabled={disabled || index === order.length - 1}
+                onClick={() =>
+                  onOrderChange(moveModeOrderItem(order, index, index + 1))
+                }
+              >
+                <ArrowDown data-icon="inline-start" />
+              </Button>
+            </span>
+          </div>
+        ))}
+      </div>
+      <span className="text-xs leading-5 text-muted-foreground">
+        自动检查时会按顺序尝试可用模式
+      </span>
+    </div>
+  )
 }
 
 /**
@@ -189,6 +298,27 @@ export function SettingsPanel({
     })
   }
 
+  /**
+   * 更新豆包模式优先级顺序。
+   *
+   * @param preferredModeOrder - 下一份模式顺序
+   * @returns 无返回值
+   */
+  function updatePreferredModeOrder(
+    preferredModeOrder: SelectableAssistantMode[],
+  ): void {
+    onConfigChange({
+      ...config,
+      assistants: {
+        ...config.assistants,
+        doubao: {
+          ...config.assistants.doubao,
+          preferredModeOrder,
+        },
+      },
+    })
+  }
+
   return (
     <div
       className={cn(
@@ -236,10 +366,16 @@ export function SettingsPanel({
 
             <SettingSwitchRow
               title="豆包"
-              description="专家优先，失败回退思考"
+              description="按优先级自动选择模式"
               checked={config.assistants.doubao.enabled}
               disabled={!config.enabled}
               onCheckedChange={updateDoubaoEnabled}
+            />
+
+            <ModeOrderEditor
+              order={config.assistants.doubao.preferredModeOrder}
+              disabled={!config.enabled || !config.assistants.doubao.enabled}
+              onOrderChange={updatePreferredModeOrder}
             />
 
             <label className="flex flex-col gap-2 rounded-md border bg-background p-3">
@@ -264,13 +400,13 @@ export function SettingsPanel({
                 }
               />
               <span className="text-xs leading-5 text-muted-foreground">
-                刷新或新对话后等待页面稳定再检查；过早可能误回退思考
+                刷新或新对话后等待页面稳定再检查；过早可能误判模式
               </span>
             </label>
 
             <label className="flex flex-col gap-2 rounded-md border bg-background p-3">
               <span className="flex items-center justify-between gap-3">
-                <span className="text-sm font-medium">专家确认延迟</span>
+                <span className="text-sm font-medium">模式确认延迟</span>
                 <span className="text-xs text-muted-foreground">毫秒</span>
               </span>
               <input
@@ -290,7 +426,7 @@ export function SettingsPanel({
                 }
               />
               <span className="text-xs leading-5 text-muted-foreground">
-                专家切换较慢时调大；超时仍未变为专家才回退思考
+                模式切换较慢时调大；超时仍未生效才尝试下一项
               </span>
             </label>
 

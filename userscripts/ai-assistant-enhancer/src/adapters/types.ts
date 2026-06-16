@@ -1,4 +1,5 @@
-export type AssistantMode = 'fast' | 'thinking' | 'expert' | 'unknown'
+export type AssistantMode = 'fast' | 'expert' | 'office' | 'unknown'
+export type SelectableAssistantMode = Exclude<AssistantMode, 'unknown'>
 
 export interface ModeSwitchResult {
   mode: AssistantMode
@@ -8,6 +9,7 @@ export interface ModeSwitchResult {
 
 export interface SwitchToBestModeOptions {
   modeSwitchConfirmMs: number
+  preferredModeOrder: readonly SelectableAssistantMode[]
 }
 
 export interface AssistantAdapter {

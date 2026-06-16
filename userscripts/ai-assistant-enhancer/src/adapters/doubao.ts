@@ -1,16 +1,14 @@
+import { DOUBAO_MODE_LABELS } from '@/config'
 import type {
   AssistantAdapter,
   AssistantMode,
   ModeSwitchResult,
+  SelectableAssistantMode,
   SwitchToBestModeOptions,
 } from './types'
 
-const MODE_TEXT: Record<Exclude<AssistantMode, 'unknown'>, string> = {
-  fast: '快速',
-  thinking: '思考',
-  expert: '专家',
-}
-const MODE_LABELS = Object.values(MODE_TEXT)
+const MODE_TEXT = DOUBAO_MODE_LABELS
+const MODE_LABELS = Object.values(DOUBAO_MODE_LABELS)
 
 const MODE_TRIGGER_SELECTOR = [
   'button[data-slot="dropdown-menu-trigger"]',
@@ -154,7 +152,7 @@ async function waitForElement<T>(
  * @returns 等待后的当前模式与是否出现登录弹窗
  */
 async function waitForModeSwitch(
-  mode: Exclude<AssistantMode, 'unknown'>,
+  mode: SelectableAssistantMode,
   timeoutMs: number,
 ): Promise<{ currentMode: AssistantMode; loginBlocked: boolean }> {
   const startedAt = Date.now()
@@ -309,9 +307,7 @@ function isNewChatClickTarget(target: Element): boolean {
  * @param mode - 目标模式
  * @returns 菜单项；不存在时返回 null
  */
-function findModeMenuItem(
-  mode: Exclude<AssistantMode, 'unknown'>,
-): Element | null {
+function findModeMenuItem(mode: SelectableAssistantMode): Element | null {
   return findModeMenuItemByText(MODE_TEXT[mode])
 }
 
@@ -388,7 +384,7 @@ function getCurrentMode(): AssistantMode {
  * @returns 切换结果
  */
 async function chooseMode(
-  mode: Exclude<AssistantMode, 'unknown'>,
+  mode: SelectableAssistantMode,
   confirmMs: number,
 ): Promise<ModeSwitchResult> {
   const menuOpened = await openModeMenu()
@@ -443,35 +439,42 @@ async function chooseMode(
 async function switchToBestMode(
   options: SwitchToBestModeOptions,
 ): Promise<ModeSwitchResult> {
-  const currentMode = getCurrentMode()
-  if (currentMode === 'expert' || currentMode === 'thinking') {
-    return {
-      mode: currentMode,
-      changed: false,
-      reason: `当前已是${MODE_TEXT[currentMode]}`,
-    }
-  }
+  let currentMode = getCurrentMode()
+  const failedReasons: string[] = []
 
-  const expertResult = await chooseMode('expert', options.modeSwitchConfirmMs)
-  if (expertResult.mode === 'expert') {
-    return expertResult
-  }
-
-  const thinkingResult = await chooseMode(
-    'thinking',
-    options.modeSwitchConfirmMs,
-  )
-  if (thinkingResult.mode === 'thinking') {
-    return {
-      ...thinkingResult,
-      reason: `${expertResult.reason}，已回退到思考`,
+  for (const mode of options.preferredModeOrder) {
+    if (currentMode === mode) {
+      return {
+        mode: currentMode,
+        changed: false,
+        reason:
+          failedReasons.length > 0
+            ? `${failedReasons.join('；')}，当前已是${MODE_TEXT[currentMode]}`
+            : `当前已是${MODE_TEXT[currentMode]}`,
+      }
     }
+
+    const result = await chooseMode(mode, options.modeSwitchConfirmMs)
+    if (result.mode === mode) {
+      return failedReasons.length > 0
+        ? {
+            ...result,
+            reason: `${failedReasons.join('；')}，${result.reason}`,
+          }
+        : result
+    }
+
+    failedReasons.push(result.reason)
+    currentMode = result.mode
   }
 
   return {
-    mode: thinkingResult.mode,
+    mode: getCurrentMode(),
     changed: false,
-    reason: `${expertResult.reason}；${thinkingResult.reason}`,
+    reason:
+      failedReasons.length > 0
+        ? failedReasons.join('；')
+        : '未配置可尝试的豆包模式',
   }
 }
 
