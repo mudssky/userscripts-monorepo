@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.4",
   "type": "module",
-  "homepage": "https://github.com/mudssky/ai-assistant-enhancer",
+  "homepage": "https://github.com/mudssky/userscripts-monorepo/tree/main/userscripts/ai-assistant-enhancer",
   "description": "AI 助手体验增强油猴脚本",
   "author": "mudssky",
   "license": "MIT",
