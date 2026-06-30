@@ -1,5 +1,8 @@
+import {
+  getActiveExecutionResultContext,
+  hasActiveExecutionResult,
+} from './result-context'
 import { SELECTORS } from './selectors'
-import { getActiveExecutionResultContext, hasActiveExecutionResult } from './result-context'
 
 const DMS_EXPORT_TIMEOUT_MS = 30000
 const DMS_EXPORT_EVENT_NAME = 'dms-helper:dms-export-result'
@@ -30,7 +33,9 @@ interface DmsExportEventDetail {
  * @param resultContainer - 查询结果容器
  * @returns 导出尝试结果
  */
-export async function exportNativeCsv(resultContainer: Element): Promise<NativeCsvExportAttempt> {
+export async function exportNativeCsv(
+  resultContainer: Element,
+): Promise<NativeCsvExportAttempt> {
   if (!canUseNativeExport(resultContainer)) {
     return {
       result: null,
@@ -75,12 +80,23 @@ export async function exportNativeCsv(resultContainer: Element): Promise<NativeC
  * @returns 可点击的导出按钮或 null
  */
 function findExportButton(resultContainer: Element): HTMLElement | null {
-  const toolbar = resultContainer.querySelector(SELECTORS.toolbar) ?? document.querySelector('.con-summary .btns') ?? resultContainer
+  const toolbar =
+    resultContainer.querySelector(SELECTORS.toolbar) ??
+    document.querySelector('.con-summary .btns') ??
+    resultContainer
   const candidates = Array.from(
-    toolbar.querySelectorAll<HTMLElement>('button, [role="button"], a, .next-btn, .next-menu-btn'),
+    toolbar.querySelectorAll<HTMLElement>(
+      'button, [role="button"], a, .next-btn, .next-menu-btn',
+    ),
   )
 
-  return candidates.find((candidate) => /导出|export|popup-exports/i.test(`${getElementText(candidate)} ${candidate.className}`)) ?? null
+  return (
+    candidates.find((candidate) =>
+      /导出|export|popup-exports/i.test(
+        `${getElementText(candidate)} ${candidate.className}`,
+      ),
+    ) ?? null
+  )
 }
 
 /**
@@ -90,11 +106,19 @@ function findExportButton(resultContainer: Element): HTMLElement | null {
  * @returns 是否可以尝试原生导出
  */
 function canUseNativeExport(resultContainer: Element): boolean {
-  if (resultContainer.querySelector('.sql-console-results-tab') && !hasActiveExecutionResult(resultContainer)) {
+  if (
+    resultContainer.querySelector('.sql-console-results-tab') &&
+    !hasActiveExecutionResult(resultContainer)
+  ) {
     return false
   }
 
-  return Boolean(findExportButton(resultContainer) || getActiveExecutionResultContext(resultContainer)?.tabPane.querySelector(SELECTORS.table))
+  return Boolean(
+    findExportButton(resultContainer) ||
+      getActiveExecutionResultContext(resultContainer)?.tabPane.querySelector(
+        SELECTORS.table,
+      ),
+  )
 }
 
 /**
@@ -106,7 +130,11 @@ function canUseNativeExport(resultContainer: Element): boolean {
 function getResultSql(resultContainer: Element): string {
   return (
     getSqlFromResultState(resultContainer) ||
-    (resultContainer.matches('.con-sql-result') ? getSqlFromActiveEditor() || getSqlFromTextArea() || getSqlFromCodeMirrorDom() : '')
+    (resultContainer.matches('.con-sql-result')
+      ? getSqlFromActiveEditor() ||
+        getSqlFromTextArea() ||
+        getSqlFromCodeMirrorDom()
+      : '')
   ).trim()
 }
 
@@ -194,7 +222,9 @@ function getSqlFromTextArea(): string {
  * @returns SQL 文本或空字符串
  */
 function getSqlFromCodeMirrorDom(): string {
-  const lines = Array.from(document.querySelectorAll<HTMLElement>('.cm-line, .CodeMirror-line'))
+  const lines = Array.from(
+    document.querySelectorAll<HTMLElement>('.cm-line, .CodeMirror-line'),
+  )
     .map((line) => line.textContent ?? '')
     .filter((line) => line.trim())
 
@@ -207,7 +237,9 @@ function getSqlFromCodeMirrorDom(): string {
  * @param captureId - 本次导出捕获 ID
  * @returns 导出事件 detail
  */
-function waitForDmsExportResult(captureId: string): Promise<DmsExportEventDetail> {
+function waitForDmsExportResult(
+  captureId: string,
+): Promise<DmsExportEventDetail> {
   return new Promise((resolve) => {
     const handler = (event: Event): void => {
       if (!(event instanceof CustomEvent)) return
@@ -391,7 +423,10 @@ function injectDmsExportRunner(captureId: string, sql: string): void {
  * @param captureId - 本次捕获 ID
  * @returns 是否为当前导出事件
  */
-function isDmsExportEventDetail(detail: unknown, captureId: string): detail is DmsExportEventDetail {
+function isDmsExportEventDetail(
+  detail: unknown,
+  captureId: string,
+): detail is DmsExportEventDetail {
   if (!detail || typeof detail !== 'object') return false
 
   const record = detail as Record<string, unknown>
@@ -407,7 +442,10 @@ function isDmsExportEventDetail(detail: unknown, captureId: string): detail is D
  */
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const timer = window.setTimeout(() => reject(new Error('等待 DMS 导出接口超时')), timeoutMs)
+    const timer = window.setTimeout(
+      () => reject(new Error('等待 DMS 导出接口超时')),
+      timeoutMs,
+    )
     promise
       .then((value) => {
         window.clearTimeout(timer)
@@ -427,7 +465,11 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
  * @returns React props 或 null
  */
 function findReactProps(element: Element): Record<string, unknown> | null {
-  const key = Object.keys(element).find((name) => name.startsWith('__reactProps$') || name.startsWith('__reactEventHandlers$'))
+  const key = Object.keys(element).find(
+    (name) =>
+      name.startsWith('__reactProps$') ||
+      name.startsWith('__reactEventHandlers$'),
+  )
   if (!key) return null
 
   const value = (element as unknown as Record<string, unknown>)[key]
@@ -441,7 +483,11 @@ function findReactProps(element: Element): Record<string, unknown> | null {
  * @returns React fiber 或 null
  */
 function findReactFiber(element: Element): Record<string, unknown> | null {
-  const key = Object.keys(element).find((name) => name.startsWith('__reactFiber$') || name.startsWith('__reactInternalInstance$'))
+  const key = Object.keys(element).find(
+    (name) =>
+      name.startsWith('__reactFiber$') ||
+      name.startsWith('__reactInternalInstance$'),
+  )
   if (!key) return null
 
   const value = (element as unknown as Record<string, unknown>)[key]
@@ -459,10 +505,10 @@ function collectSqlFromFiber(fiber: Record<string, unknown> | null): string[] {
   let current: unknown = fiber
 
   for (let depth = 0; isRecord(current) && depth < 20; depth += 1) {
-    candidates.push(...collectSqlFromUnknown(current['memoizedProps'], 0))
-    candidates.push(...collectSqlFromUnknown(current['pendingProps'], 0))
-    candidates.push(...collectSqlFromUnknown(current['memoizedState'], 0))
-    current = current['return']
+    candidates.push(...collectSqlFromUnknown(current.memoizedProps, 0))
+    candidates.push(...collectSqlFromUnknown(current.pendingProps, 0))
+    candidates.push(...collectSqlFromUnknown(current.memoizedState, 0))
+    current = current.return
   }
 
   return candidates
@@ -506,8 +552,15 @@ function collectSqlFromUnknown(source: unknown, depth: number): string[] {
  */
 function shouldTraverseKey(key: string, value: unknown): boolean {
   if (!value || typeof value !== 'object') return false
-  if (/^(stateNode|child|sibling|return|alternate|ref|elementType|type|_owner)$/i.test(key)) return false
-  return /data|record|result|row|props|state|list|tabs|pane|children|item/i.test(key)
+  if (
+    /^(stateNode|child|sibling|return|alternate|ref|elementType|type|_owner)$/i.test(
+      key,
+    )
+  )
+    return false
+  return /data|record|result|row|props|state|list|tabs|pane|children|item/i.test(
+    key,
+  )
 }
 
 /**
@@ -534,7 +587,9 @@ function getNestedString(source: unknown, path: string[]): string {
  * @param root - 搜索根对象
  * @returns 编辑器对象或 null
  */
-function findEditorLikeObject(root: unknown): { getValue?: () => unknown; getSelection?: () => unknown } | null {
+function findEditorLikeObject(
+  root: unknown,
+): { getValue?: () => unknown; getSelection?: () => unknown } | null {
   const visited = new Set<unknown>()
   const queue: unknown[] = [root]
 
@@ -543,8 +598,14 @@ function findEditorLikeObject(root: unknown): { getValue?: () => unknown; getSel
     if (!isRecord(current) || visited.has(current)) continue
     visited.add(current)
 
-    if (typeof current.getValue === 'function' && typeof current.getSelection === 'function') {
-      return current as { getValue?: () => unknown; getSelection?: () => unknown }
+    if (
+      typeof current.getValue === 'function' &&
+      typeof current.getSelection === 'function'
+    ) {
+      return current as {
+        getValue?: () => unknown
+        getSelection?: () => unknown
+      }
     }
 
     for (const key of Object.keys(current).slice(0, 80)) {

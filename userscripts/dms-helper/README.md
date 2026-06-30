@@ -1,7 +1,7 @@
 # DMS Helper - 阿里云 DMS 查询结果复制工具
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/mudssky/dms-helper)](https://github.com/mudssky/dms-helper/releases/latest)
-[![GitHub](https://img.shields.io/github/license/mudssky/dms-helper)](https://github.com/mudssky/dms-helper/blob/main/LICENSE)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/mudssky/userscripts-monorepo)](https://github.com/mudssky/userscripts-monorepo/releases/latest)
+[![GitHub](https://img.shields.io/github/license/mudssky/userscripts-monorepo)](https://github.com/mudssky/userscripts-monorepo/blob/main/LICENSE)
 
 阿里云 DMS SQL 控制台增强脚本，一键复制查询结果为 CSV 或 Markdown 格式。
 
@@ -9,7 +9,7 @@
 
 - **复制 CSV**：将查询结果表格导出为 CSV 格式，可直接粘贴到 Excel
 - **复制 Markdown**：将查询结果表格导出为 Markdown 表格，适合文档和笔记
-- **导出优先**：CSV 默认优先复用 DMS 原生导出能力，捕获导出的 CSV 后直接复制到剪贴板；捕获失败时自动回退到复制模式
+- **导出优先**：CSV 和 Markdown 默认优先复用 DMS 原生导出能力，捕获导出的 CSV 后直接复制到目标格式；捕获失败时自动回退到复制模式
 - **虚拟滚动复制**：自动滚动收集虚拟表格数据；超过 300 行时会先确认，取消后仅复制前 300 行
 - **Tab 切换跟随**：多个执行结果切换时，按钮自动跟随到当前活动 tab
 - **DOM Debugger**：内置选择器诊断菜单，方便排查页面结构变化导致的兼容问题
@@ -29,7 +29,7 @@
 
 ### CSV 复制模式
 
-「复制 CSV」默认使用导出模式：脚本会点击 DMS 页面原生导出入口，捕获前端生成的 CSV 文件内容，并直接写入剪贴板。如果页面没有导出按钮，或导出内容无法被脚本捕获，会自动回退到复制模式。
+「复制 CSV」和「复制 Markdown」默认使用导出模式：脚本会调用 DMS 页面内部导出能力，捕获前端生成的 CSV 内容，并按目标格式写入剪贴板。如果导出接口失败、页面没有导出能力，或导出内容无法被脚本捕获，会自动回退到复制模式。
 
 如需强制使用旧复制方式，可在 Tampermonkey 菜单中点击「切换复制模式」。选择会持久保存，刷新页面后继续生效。
 

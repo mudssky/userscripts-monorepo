@@ -1,8 +1,8 @@
-import { SELECTORS } from './selectors'
-import { injectButtons, removeInjectedButtons } from './ui'
 import { registerDomDebuggerMenu } from '@mudssky/userscript-utils'
 import { registerCopyModeMenu } from './copy-mode'
 import { hasActiveExecutionResult } from './result-context'
+import { SELECTORS } from './selectors'
+import { injectButtons, removeInjectedButtons } from './ui'
 
 const isInIframe = window.self !== window.top
 const isSqlConsolePage =

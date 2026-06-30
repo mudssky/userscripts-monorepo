@@ -1,8 +1,7 @@
 import { GM_setClipboard } from '$'
-import { COPY_CONFIG } from './config'
 import { getCopyMode } from './copy-mode'
+import { buildCopyPayload, type CopyFormat } from './copy-strategy'
 import { exportNativeCsv } from './csv-exporter'
-import { toCSV, toMarkdown, type TableData } from './format'
 import { collectTableData } from './table-collector'
 
 /**
@@ -77,7 +76,11 @@ export function showToast(message: string): void {
  * @returns 无返回值
  */
 function removeInjectedButtons(toolbar: Element): void {
-  toolbar.querySelectorAll('#dms-helper-csv-btn, #dms-helper-md-btn').forEach((btn) => btn.remove())
+  toolbar
+    .querySelectorAll('#dms-helper-csv-btn, #dms-helper-md-btn')
+    .forEach((btn) => {
+      btn.remove()
+    })
 }
 
 /**
@@ -93,79 +96,42 @@ function confirmLargeCopy(rowLimit: number): boolean {
 }
 
 /**
- * 复制格式化后的表格数据
+ * 复制指定格式的表格数据
  *
  * @param resultContainer - 查询结果容器
- * @param type - 复制内容类型
- * @param formatter - 表格格式化函数
+ * @param format - 复制格式
  * @returns 复制完成后的 Promise
  */
-async function copyFormattedTable(
+async function copyTableWithPreferredMode(
   resultContainer: Element,
-  type: string,
-  formatter: (data: TableData | null) => string,
+  format: CopyFormat,
 ): Promise<void> {
-  showToast(`正在收集 ${type} 数据...`)
-
-  const result = await collectTableData(resultContainer, {
-    rowLimit: COPY_CONFIG.slowRowThreshold,
-    confirmLargeCopy,
-  })
-
-  if (!result.data || result.data.rows.length === 0) {
-    showToast('❌ 未找到可复制的表格数据')
-    return
-  }
-
-  const text = formatter(result.data)
-
-  if (!text) {
-    showToast('❌ 未找到可复制的表格数据')
-    return
-  }
-
-  const copiedType = result.truncated ? `${type}（前 ${result.rowLimit} 行）` : type
-  await copyText(text, copiedType)
-}
-
-/**
- * 使用现有 DOM/虚拟滚动收集逻辑复制 CSV
- *
- * @param resultContainer - 查询结果容器
- * @returns 复制完成后的 Promise
- */
-async function copyCsvFromDom(resultContainer: Element): Promise<void> {
-  await copyFormattedTable(resultContainer, 'CSV', toCSV)
-}
-
-/**
- * 优先使用 DMS 原生导出能力复制 CSV，只有导出能力不存在时回退 DOM
- *
- * @param resultContainer - 查询结果容器
- * @returns 复制完成后的 Promise
- */
-async function copyCsvWithPreferredMode(resultContainer: Element): Promise<void> {
   if (getCopyMode() === 'dom') {
     showToast('⚠️ 当前为复制模式，将复制页面 DOM 中已渲染内容')
-    await copyCsvFromDom(resultContainer)
+  } else {
+    showToast('正在调用 DMS 导出接口...')
+  }
+
+  const result = await buildCopyPayload(
+    resultContainer,
+    format,
+    confirmLargeCopy,
+    {
+      getCopyMode,
+      exportNativeCsv,
+      collectTableData,
+    },
+  )
+  if (!result.ok) {
+    showToast(`❌ ${result.reason}`)
     return
   }
 
-  showToast('正在调用 DMS 导出接口...')
-  const exportAttempt = await exportNativeCsv(resultContainer)
-
-  if (exportAttempt.result) {
-    await copyText(exportAttempt.result.csvText, 'CSV（导出）')
-    return
+  if (result.fallbackReason) {
+    showToast(`⚠️ ${result.fallbackReason}，已切换为复制模式`)
   }
 
-  if (exportAttempt.exportButtonFound) {
-    showToast(`❌ DMS 导出接口失败：${exportAttempt.error ?? '未返回 CSV'}`)
-    return
-  }
-
-  showToast('⚠️ 未捕获到导出 CSV，已切换为复制模式')
-  await copyCsvFromDom(resultContainer)
+  await copyText(result.text, result.copiedType)
 }
 
 /**
@@ -175,7 +141,10 @@ async function copyCsvWithPreferredMode(resultContainer: Element): Promise<void>
  * @param resultContainer - 查询结果容器
  * @returns 无返回值
  */
-export function injectButtons(toolbar: Element, resultContainer: Element): void {
+export function injectButtons(
+  toolbar: Element,
+  resultContainer: Element,
+): void {
   if (toolbar.querySelector('#dms-helper-csv-btn')) return
 
   /**
@@ -185,7 +154,10 @@ export function injectButtons(toolbar: Element, resultContainer: Element): void 
    * @param onClick - 点击回调
    * @returns 按钮元素
    */
-  const createBtn = (text: string, onClick: () => Promise<void>): HTMLButtonElement => {
+  const createBtn = (
+    text: string,
+    onClick: () => Promise<void>,
+  ): HTMLButtonElement => {
     const btn = document.createElement('button')
     btn.className = 'next-btn next-small next-btn-normal is-wind'
     btn.style.marginLeft = '8px'
@@ -201,10 +173,14 @@ export function injectButtons(toolbar: Element, resultContainer: Element): void 
     return btn
   }
 
-  const csvBtn = createBtn('复制 CSV', () => copyCsvWithPreferredMode(resultContainer))
+  const csvBtn = createBtn('复制 CSV', () =>
+    copyTableWithPreferredMode(resultContainer, 'csv'),
+  )
   csvBtn.id = 'dms-helper-csv-btn'
 
-  const mdBtn = createBtn('复制 Markdown', () => copyFormattedTable(resultContainer, 'Markdown', toMarkdown))
+  const mdBtn = createBtn('复制 Markdown', () =>
+    copyTableWithPreferredMode(resultContainer, 'markdown'),
+  )
   mdBtn.id = 'dms-helper-md-btn'
 
   toolbar.appendChild(csvBtn)

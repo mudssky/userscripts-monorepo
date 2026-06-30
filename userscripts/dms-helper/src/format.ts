@@ -1,10 +1,77 @@
-import { SELECTORS } from './selectors'
 import { findActiveExecutionResultTable } from './result-context'
+import { SELECTORS } from './selectors'
 
 /** 表格数据结构 */
 export interface TableData {
   headers: string[]
   rows: string[][]
+}
+
+/**
+ * 解析 CSV 文本为表格数据。
+ *
+ * @param csvText - CSV 文本
+ * @returns 表格数据；文本为空或没有表头时返回 null
+ */
+export function parseCSV(csvText: string): TableData | null {
+  const lines = parseCsvRows(csvText)
+  const [headers, ...rows] = lines
+
+  if (!headers || headers.length === 0) return null
+
+  return { headers, rows }
+}
+
+/**
+ * 按 CSV 转义规则解析行列。
+ *
+ * @param csvText - CSV 文本
+ * @returns CSV 行列数据
+ */
+function parseCsvRows(csvText: string): string[][] {
+  const rows: string[][] = []
+  let row: string[] = []
+  let field = ''
+  let inQuotes = false
+
+  for (let index = 0; index < csvText.length; index += 1) {
+    const char = csvText[index]
+    const nextChar = csvText[index + 1]
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        field += '"'
+        index += 1
+      } else {
+        inQuotes = !inQuotes
+      }
+      continue
+    }
+
+    if (char === ',' && !inQuotes) {
+      row.push(field)
+      field = ''
+      continue
+    }
+
+    if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && nextChar === '\n') index += 1
+      row.push(field)
+      rows.push(row)
+      row = []
+      field = ''
+      continue
+    }
+
+    field += char
+  }
+
+  if (field || row.length > 0) {
+    row.push(field)
+    rows.push(row)
+  }
+
+  return rows
 }
 
 /**
@@ -28,7 +95,9 @@ export function findTable(resultContainer?: Element | null): Element | null {
  * @param resultContainer - 结果容器元素，默认 document
  * @returns 表头字段列表或 null
  */
-export function parseHeaders(resultContainer?: Element | null): string[] | null {
+export function parseHeaders(
+  resultContainer?: Element | null,
+): string[] | null {
   const table = findTable(resultContainer)
   if (!table) return null
 
@@ -91,7 +160,7 @@ export function parseTable(resultContainer?: Element | null): TableData | null {
  */
 export function toCSV(data: TableData | null): string {
   if (!data) return ''
-  const escape = (val: string | null | undefined): string => {
+  const escapeCsvCell = (val: string | null | undefined): string => {
     if (val === null || val === undefined) return ''
     const str = String(val)
     if (str.includes(',') || str.includes('"') || str.includes('\n')) {
@@ -99,8 +168,10 @@ export function toCSV(data: TableData | null): string {
     }
     return str
   }
-  const lines = [data.headers.map(escape).join(',')]
-  data.rows.forEach((row) => lines.push(row.map(escape).join(',')))
+  const lines = [data.headers.map(escapeCsvCell).join(',')]
+  data.rows.forEach((row) => {
+    lines.push(row.map(escapeCsvCell).join(','))
+  })
   return lines.join('\n')
 }
 

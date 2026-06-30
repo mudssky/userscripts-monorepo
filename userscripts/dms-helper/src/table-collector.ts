@@ -1,5 +1,11 @@
 import { COPY_CONFIG } from './config'
-import { findTable, parseHeaders, parseTable, parseVisibleRows, type TableData } from './format'
+import {
+  findTable,
+  parseHeaders,
+  parseTable,
+  parseVisibleRows,
+  type TableData,
+} from './format'
 import { SELECTORS } from './selectors'
 
 /** 表格收集结果 */
@@ -30,10 +36,19 @@ export async function collectTableData(
   const scrollContainer = await findVirtualScrollContainer(resultContainer)
 
   if (!scrollContainer) {
-    return collectStaticTableData(resultContainer, rowLimit, options.confirmLargeCopy)
+    return collectStaticTableData(
+      resultContainer,
+      rowLimit,
+      options.confirmLargeCopy,
+    )
   }
 
-  return collectVirtualTableData(resultContainer, scrollContainer, rowLimit, options.confirmLargeCopy)
+  return collectVirtualTableData(
+    resultContainer,
+    scrollContainer,
+    rowLimit,
+    options.confirmLargeCopy,
+  )
 }
 
 /**
@@ -88,11 +103,19 @@ async function collectVirtualTableData(
     setScrollTop(scrollContainer, 0)
     await waitForTableRender()
 
-    for (let stepIndex = 0; stepIndex < COPY_CONFIG.maxVirtualScrollSteps; stepIndex += 1) {
+    for (
+      let stepIndex = 0;
+      stepIndex < COPY_CONFIG.maxVirtualScrollSteps;
+      stepIndex += 1
+    ) {
       const visibleRows = parseVisibleRows(resultContainer)
       rows = mergeRows(rows, visibleRows)
 
-      if (rows.length >= rowLimit && !hasConfirmedLargeCopy && canScrollDown(scrollContainer)) {
+      if (
+        rows.length >= rowLimit &&
+        !hasConfirmedLargeCopy &&
+        canScrollDown(scrollContainer)
+      ) {
         hasConfirmedLargeCopy = await confirmLargeCopy(rowLimit)
         if (!hasConfirmedLargeCopy) {
           rows = rows.slice(0, rowLimit)
@@ -106,7 +129,10 @@ async function collectVirtualTableData(
       }
 
       const nextScrollTop = getNextScrollTop(scrollContainer, resultContainer)
-      if (nextScrollTop <= scrollContainer.scrollTop || scrollContainer.scrollTop === previousScrollTop) {
+      if (
+        nextScrollTop <= scrollContainer.scrollTop ||
+        scrollContainer.scrollTop === previousScrollTop
+      ) {
         break
       }
 
@@ -136,7 +162,9 @@ async function collectVirtualTableData(
  * @param resultContainer - 查询结果容器
  * @returns 虚拟滚动容器或 null
  */
-async function findVirtualScrollContainer(resultContainer: Element): Promise<HTMLElement | null> {
+async function findVirtualScrollContainer(
+  resultContainer: Element,
+): Promise<HTMLElement | null> {
   const table = findTable(resultContainer)
   if (!table) return null
 
@@ -165,13 +193,18 @@ async function findVirtualScrollContainer(resultContainer: Element): Promise<HTM
  * @param table - 表格元素
  * @returns 候选滚动元素列表
  */
-function collectScrollCandidates(resultContainer: Element, table: Element): HTMLElement[] {
+function collectScrollCandidates(
+  resultContainer: Element,
+  table: Element,
+): HTMLElement[] {
   const candidates = new Set<HTMLElement>()
 
   addElementCandidate(candidates, table)
-  resultContainer.querySelectorAll(SELECTORS.tableScrollCandidates).forEach((element) => {
-    addElementCandidate(candidates, element)
-  })
+  resultContainer
+    .querySelectorAll(SELECTORS.tableScrollCandidates)
+    .forEach((element) => {
+      addElementCandidate(candidates, element)
+    })
   resultContainer.querySelectorAll('*').forEach((element) => {
     if (isPotentialScrollCandidate(element, table)) {
       addElementCandidate(candidates, element)
@@ -195,7 +228,10 @@ function collectScrollCandidates(resultContainer: Element, table: Element): HTML
  * @param element - 待加入元素
  * @returns 无返回值
  */
-function addElementCandidate(candidates: Set<HTMLElement>, element: Element | null): void {
+function addElementCandidate(
+  candidates: Set<HTMLElement>,
+  element: Element | null,
+): void {
   if (element instanceof HTMLElement) {
     candidates.add(element)
   }
@@ -210,10 +246,14 @@ function addElementCandidate(candidates: Set<HTMLElement>, element: Element | nu
  */
 function isPotentialScrollCandidate(element: Element, table: Element): boolean {
   if (!(element instanceof HTMLElement)) return false
-  if (!element.contains(table) && !element.querySelector(SELECTORS.bodyRows)) return false
+  if (!element.contains(table) && !element.querySelector(SELECTORS.bodyRows))
+    return false
 
   const className = element.className.toString()
-  return /table|body|virtual|scroll|container|content/i.test(className) || element.scrollHeight > element.clientHeight + 1
+  return (
+    /table|body|virtual|scroll|container|content/i.test(className) ||
+    element.scrollHeight > element.clientHeight + 1
+  )
 }
 
 /**
@@ -243,7 +283,9 @@ function isScrollableElement(element: Element | null): element is HTMLElement {
  * @returns 是否应排除该元素
  */
 function isResizeDetectorElement(element: HTMLElement): boolean {
-  return /(^|\s)erd_|resize[-_]?detector|scroll_detection/i.test(element.className.toString())
+  return /(^|\s)erd_|resize[-_]?detector|scroll_detection/i.test(
+    element.className.toString(),
+  )
 }
 
 /**
@@ -256,7 +298,8 @@ function canSetScrollTop(element: HTMLElement): boolean {
   if (isResizeDetectorElement(element)) return false
 
   const originalScrollTop = element.scrollTop
-  const targetScrollTop = originalScrollTop > 0 ? originalScrollTop - 1 : originalScrollTop + 1
+  const targetScrollTop =
+    originalScrollTop > 0 ? originalScrollTop - 1 : originalScrollTop + 1
 
   element.scrollTop = targetScrollTop
   const changed = element.scrollTop !== originalScrollTop
@@ -273,7 +316,11 @@ function canSetScrollTop(element: HTMLElement): boolean {
  * @param table - 表格元素
  * @returns 候选优先级分数
  */
-function scoreScrollCandidate(element: HTMLElement, resultContainer: Element, table: Element): number {
+function scoreScrollCandidate(
+  element: HTMLElement,
+  resultContainer: Element,
+  table: Element,
+): number {
   if (isResizeDetectorElement(element)) return Number.NEGATIVE_INFINITY
 
   const className = element.className.toString()
@@ -284,7 +331,12 @@ function scoreScrollCandidate(element: HTMLElement, resultContainer: Element, ta
   if (element.matches(SELECTORS.tableScrollCandidates)) score += 2000
   if (/\bart-table-wrapper\b/i.test(className)) score += 4500
   if (/\bdui-use-virtual\b/i.test(className)) score += 3500
-  if (/\b(art|next)-table-(body|scroll|scroller|content|container|body-wrapper)\b/i.test(className)) score += 3000
+  if (
+    /\b(art|next)-table-(body|scroll|scroller|content|container|body-wrapper)\b/i.test(
+      className,
+    )
+  )
+    score += 3000
   if (/virtual/i.test(className)) score += 1500
   if (/scroll/i.test(className)) score += 1000
   if (element.querySelector(SELECTORS.bodyRows)) score += 800
@@ -302,7 +354,10 @@ function scoreScrollCandidate(element: HTMLElement, resultContainer: Element, ta
  * @param scrollContainer - 候选滚动容器
  * @returns 是否会触发虚拟表格换行渲染
  */
-async function canTriggerVirtualRows(resultContainer: Element, scrollContainer: HTMLElement): Promise<boolean> {
+async function canTriggerVirtualRows(
+  resultContainer: Element,
+  scrollContainer: HTMLElement,
+): Promise<boolean> {
   const originalScrollTop = scrollContainer.scrollTop
   const originalRows = getVisibleRowSignature(resultContainer)
   const nextScrollTop = getProbeScrollTop(scrollContainer, resultContainer)
@@ -313,7 +368,11 @@ async function canTriggerVirtualRows(resultContainer: Element, scrollContainer: 
     await waitForTableRender()
     const nextRows = getVisibleRowSignature(resultContainer)
 
-    return originalRows.length > 0 && nextRows.length > 0 && !areStringArraysEqual(originalRows, nextRows)
+    return (
+      originalRows.length > 0 &&
+      nextRows.length > 0 &&
+      !areStringArraysEqual(originalRows, nextRows)
+    )
   } finally {
     setScrollTop(scrollContainer, originalScrollTop)
     await waitForTableRender()
@@ -327,14 +386,20 @@ async function canTriggerVirtualRows(resultContainer: Element, scrollContainer: 
  * @param resultContainer - 查询结果容器
  * @returns 探测用滚动位置
  */
-function getProbeScrollTop(scrollContainer: HTMLElement, resultContainer: Element): number {
+function getProbeScrollTop(
+  scrollContainer: HTMLElement,
+  resultContainer: Element,
+): number {
   if (canScrollDown(scrollContainer)) {
     return getNextScrollTop(scrollContainer, resultContainer)
   }
 
   if (scrollContainer.scrollTop > 0) {
     const rowHeight = getEstimatedRowHeight(resultContainer)
-    const step = Math.max(rowHeight, scrollContainer.clientHeight - rowHeight * COPY_CONFIG.scrollOverlapRows)
+    const step = Math.max(
+      rowHeight,
+      scrollContainer.clientHeight - rowHeight * COPY_CONFIG.scrollOverlapRows,
+    )
     return Math.max(0, scrollContainer.scrollTop - step)
   }
 
@@ -371,7 +436,10 @@ function areStringArraysEqual(left: string[], right: string[]): boolean {
  * @returns 是否还能继续向下滚动
  */
 function canScrollDown(scrollContainer: HTMLElement): boolean {
-  return scrollContainer.scrollTop + scrollContainer.clientHeight < scrollContainer.scrollHeight - 1
+  return (
+    scrollContainer.scrollTop + scrollContainer.clientHeight <
+    scrollContainer.scrollHeight - 1
+  )
 }
 
 /**
@@ -381,11 +449,15 @@ function canScrollDown(scrollContainer: HTMLElement): boolean {
  * @param resultContainer - 查询结果容器
  * @returns 下一次滚动位置
  */
-function getNextScrollTop(scrollContainer: HTMLElement, resultContainer: Element): number {
+function getNextScrollTop(
+  scrollContainer: HTMLElement,
+  resultContainer: Element,
+): number {
   const rowHeight = getEstimatedRowHeight(resultContainer)
   const overlapHeight = rowHeight * COPY_CONFIG.scrollOverlapRows
   const step = Math.max(rowHeight, scrollContainer.clientHeight - overlapHeight)
-  const maxScrollTop = scrollContainer.scrollHeight - scrollContainer.clientHeight
+  const maxScrollTop =
+    scrollContainer.scrollHeight - scrollContainer.clientHeight
 
   return Math.min(maxScrollTop, scrollContainer.scrollTop + step)
 }
@@ -434,7 +506,10 @@ function waitForTableRender(): Promise<void> {
  * @param visibleRows - 当前视口数据行
  * @returns 合并后的数据行
  */
-function mergeRows(collectedRows: string[][], visibleRows: string[][]): string[][] {
+function mergeRows(
+  collectedRows: string[][],
+  visibleRows: string[][],
+): string[][] {
   if (visibleRows.length === 0) return collectedRows
   if (collectedRows.length === 0) return [...visibleRows]
 
@@ -451,7 +526,10 @@ function mergeRows(collectedRows: string[][], visibleRows: string[][]): string[]
  * @param visibleRows - 当前视口数据行
  * @returns 重叠行数
  */
-function findOverlapLength(collectedRows: string[][], visibleRows: string[][]): number {
+function findOverlapLength(
+  collectedRows: string[][],
+  visibleRows: string[][],
+): number {
   const maxOverlap = Math.min(collectedRows.length, visibleRows.length)
 
   for (let length = maxOverlap; length > 0; length -= 1) {
@@ -472,10 +550,15 @@ function findOverlapLength(collectedRows: string[][], visibleRows: string[][]): 
  * @param rightRows - 右侧数据行
  * @returns 两组数据行是否一致
  */
-function areRowGroupsEqual(leftRows: string[][], rightRows: string[][]): boolean {
+function areRowGroupsEqual(
+  leftRows: string[][],
+  rightRows: string[][],
+): boolean {
   if (leftRows.length !== rightRows.length) return false
 
-  return leftRows.every((leftRow, index) => areRowsEqual(leftRow, rightRows[index]))
+  return leftRows.every((leftRow, index) =>
+    areRowsEqual(leftRow, rightRows[index]),
+  )
 }
 
 /**
@@ -485,7 +568,10 @@ function areRowGroupsEqual(leftRows: string[][], rightRows: string[][]): boolean
  * @param rightRow - 右侧数据行
  * @returns 两行数据是否一致
  */
-function areRowsEqual(leftRow: string[], rightRow: string[] | undefined): boolean {
+function areRowsEqual(
+  leftRow: string[],
+  rightRow: string[] | undefined,
+): boolean {
   if (!rightRow) return false
   if (leftRow.length !== rightRow.length) return false
 

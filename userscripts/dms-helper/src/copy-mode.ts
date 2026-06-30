@@ -1,4 +1,9 @@
-import { GM_getValue, GM_notification, GM_registerMenuCommand, GM_setValue } from '$'
+import {
+  GM_getValue,
+  GM_notification,
+  GM_registerMenuCommand,
+  GM_setValue,
+} from '$'
 
 const COPY_MODE_STORAGE_KEY = 'dms-helper-copy-mode'
 
@@ -71,15 +76,22 @@ function getCopyModeLabel(mode: CopyMode): string {
  */
 export function registerCopyModeMenu(): void {
   if (typeof GM_registerMenuCommand === 'undefined') {
-    console.warn('[DMS Helper] GM_registerMenuCommand 不可用，跳过复制模式菜单注册')
+    console.warn(
+      '[DMS Helper] GM_registerMenuCommand 不可用，跳过复制模式菜单注册',
+    )
     return
   }
 
-  GM_registerMenuCommand(`切换复制模式（当前：${getCopyModeLabel(getCopyMode())}）`, () => {
-    const nextMode = getNextCopyMode(getCopyMode())
-    setCopyMode(nextMode)
-    notifyCopyMode(`已切换为${getCopyModeLabel(nextMode)}，刷新页面后菜单文案会更新`)
-  })
+  GM_registerMenuCommand(
+    `切换复制模式（当前：${getCopyModeLabel(getCopyMode())}）`,
+    () => {
+      const nextMode = getNextCopyMode(getCopyMode())
+      setCopyMode(nextMode)
+      notifyCopyMode(
+        `已切换为${getCopyModeLabel(nextMode)}，刷新页面后菜单文案会更新`,
+      )
+    },
+  )
 }
 
 /**

@@ -1,9 +1,9 @@
 {
   "name": "dms-helper",
   "private": true,
-  "version": "1.4.0",
+  "version": "1.4.1",
   "type": "module",
-  "homepage": "https://github.com/mudssky/dms-helper",
+  "homepage": "https://github.com/mudssky/userscripts-monorepo/tree/main/userscripts/dms-helper",
   "description": "阿里云 DMS 查询结果表格复制工具（CSV & Markdown）",
   "author": "mudssky",
   "license": "MIT",
@@ -13,9 +13,9 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "lint": "biome lint --write .",
-    "format": "biome format --write .",
-    "biome:check": "biome check .",
+    "lint": "biome lint --config-path biome.json --write .",
+    "format": "biome format --config-path biome.json --write .",
+    "biome:check": "biome check --config-path biome.json .",
     "qa": "pnpm typecheck && pnpm biome:check && pnpm test"
   },
   "dependencies": {

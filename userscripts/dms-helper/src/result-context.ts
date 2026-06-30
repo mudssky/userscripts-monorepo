@@ -12,7 +12,9 @@ export interface ActiveExecutionResultContext {
  * @param resultContainer - 查询结果容器
  * @returns 活动执行结果上下文；当前 tab 不是执行结果时返回 null
  */
-export function getActiveExecutionResultContext(resultContainer: Element | Document): ActiveExecutionResultContext | null {
+export function getActiveExecutionResultContext(
+  resultContainer: Element | Document,
+): ActiveExecutionResultContext | null {
   const tab = findActiveResultTab(resultContainer)
   if (!tab || !isExecutionResultTab(tab)) return null
 
@@ -28,7 +30,9 @@ export function getActiveExecutionResultContext(resultContainer: Element | Docum
  * @param resultContainer - 查询结果容器
  * @returns 是否存在活动执行结果
  */
-export function hasActiveExecutionResult(resultContainer: Element | Document): boolean {
+export function hasActiveExecutionResult(
+  resultContainer: Element | Document,
+): boolean {
   return Boolean(getActiveExecutionResultContext(resultContainer))
 }
 
@@ -38,7 +42,9 @@ export function hasActiveExecutionResult(resultContainer: Element | Document): b
  * @param resultContainer - 查询结果容器
  * @returns 活动执行结果表格；当前 tab 不是执行结果时返回 null
  */
-export function findActiveExecutionResultTable(resultContainer: Element | Document): Element | null {
+export function findActiveExecutionResultTable(
+  resultContainer: Element | Document,
+): Element | null {
   const context = getActiveExecutionResultContext(resultContainer)
   return context?.tabPane.querySelector(SELECTORS.table) ?? null
 }
@@ -49,7 +55,9 @@ export function findActiveExecutionResultTable(resultContainer: Element | Docume
  * @param resultContainer - 查询结果容器
  * @returns 活动 tab 元素或 null
  */
-function findActiveResultTab(resultContainer: Element | Document): Element | null {
+function findActiveResultTab(
+  resultContainer: Element | Document,
+): Element | null {
   return resultContainer.querySelector(
     '.sql-console-results-tab > .next-tabs-bar [role="tab"].active, .sql-console-results-tab > .next-tabs-bar [role="tab"][aria-selected="true"], .sql-console-results-tab > .next-tabs-bar .next-tabs-tab.active',
   )
@@ -73,10 +81,15 @@ function isExecutionResultTab(tab: Element): boolean {
  * @param activeTab - 活动 tab 元素
  * @returns 活动 tabpane 或 null
  */
-function findActiveResultTabPane(resultContainer: Element | Document, activeTab: Element): Element | null {
+function findActiveResultTabPane(
+  resultContainer: Element | Document,
+  activeTab: Element,
+): Element | null {
   const controlledId = activeTab.getAttribute('aria-controls')
   if (controlledId) {
-    const controlledPane = resultContainer.querySelector(`#${CSS.escape(controlledId)}`)
+    const controlledPane = resultContainer.querySelector(
+      `#${CSS.escape(controlledId)}`,
+    )
     if (controlledPane) return controlledPane
   }
 

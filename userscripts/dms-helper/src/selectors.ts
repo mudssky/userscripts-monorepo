@@ -3,7 +3,8 @@ export const SELECTORS = {
   /** 查询结果容器 */
   resultContainer: '.con-sql-result, .panel-result',
   /** 工具栏 */
-  toolbar: '.bar-top, .sql-console-results-tab > .next-tabs-bar .next-tabs-nav-extra',
+  toolbar:
+    '.bar-top, .sql-console-results-tab > .next-tabs-bar .next-tabs-nav-extra',
   /** 表格 */
   table: '.art-table, .next-table',
   /** 表格滚动主体 */
