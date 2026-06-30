@@ -53,6 +53,7 @@ userscripts-monorepo/
 - 复杂脚本如果需要独立依赖、开发服务器、框架插件、发布配置或 subtree 同步，应配置成独立 workspace 包，并维护自己的 `package.json`、构建配置、README 和 userscript metadata。
 - UI 框架按脚本需求选择，不强制 Vue；需要 React 生态时可以使用 Vite + React，需要 Vue 生态时可以使用 Vite + Vue。
 - 默认优先使用 `vite-plugin-monkey` 处理 userscript metadata、grant、match、updateURL、downloadURL 等油猴脚本配置，避免重复开发脚本头部生成逻辑。
+- 维护或迁移 userscript 发布入口时，`package.json.homepage`、`namespace`、`homepage`、`supportURL`、`updateURL`、`downloadURL`、README 安装链接和徽章必须一起全局搜索并同步。Tampermonkey 更新检查依赖 `@updateURL` 与递增的 `@version`，`@downloadURL` 用于检测到更新后下载完整脚本；当前仓库默认二者都指向 `https://github.com/mudssky/userscripts-monorepo/releases/latest/download/<script>.user.js`。
 - 简单脚本如果没有复杂 UI、独立依赖或独立发布流程，可以考虑由根目录的 Rolldown 等集中构建配置负责打包；但只有在根级构建已经提供等价的 userscript metadata 生成能力后才能这么做。
 - 根目录的 `package.json` 登记通用批量命令、根级轻量构建命令，以及常用的单脚本别名，例如 `dev:<script-name>`、`build:<script-name>`。
 - 根级批量构建继续使用 pnpm filter，例如 `pnpm --filter ./userscripts/* run build`。
